@@ -43,3 +43,9 @@ TODO: usage example, install notes.
 
 - SLA empty = disabled
 - Failed samples + summary metrics go to RP
+
+## Release
+
+- JMeter: tag `jmeter-v1.0.0`, or Actions → Release → plugin `jmeter`
+- Gatling: tag `gatling-v1.0.0`, or plugin `gatling` (Akka JAR; Pekko is still a stub)
+- Both: tag `v1.0.0`, or plugin `all`
