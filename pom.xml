@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.epam.reportportal</groupId>
+    <artifactId>load-testing-rp-plugins</artifactId>
+    <version>${revision}</version>
+    <packaging>pom</packaging>
+
+    <name>Load Testing ReportPortal Plugins</name>
+    <description>Shared ReportPortal integration for JMeter and Gatling load-testing tools</description>
+    <url>https://github.com/reportportal/plugin-jmeter</url>
+
+    <modules>
+        <module>rp-common</module>
+        <module>jmeter-plugin</module>
+        <module>gatling-akka</module>
+        <module>gatling-pekko</module>
+    </modules>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <organization>ReportPortal.io</organization>
+            <organizationUrl>https://reportportal.io</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/reportportal/plugin-jmeter.git</connection>
+        <developerConnection>scm:git:ssh://github.com:reportportal/plugin-jmeter.git</developerConnection>
+        <url>https://github.com/reportportal/plugin-jmeter</url>
+    </scm>
+
+    <properties>
+        <revision>1.0.0</revision>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jmeter.version>5.5</jmeter.version>
+        <gatling.akka.version>3.6.1</gatling.akka.version>
+        <gatling.pekko.version>3.11.5</gatling.pekko.version>
+        <scala.version>2.13.18</scala.version>
+        <reportportal.client.version>5.2.2</reportportal.client.version>
+        <okhttp.version>4.10.0</okhttp.version>
+        <gson.version>2.10.1</gson.version>
+        <hdrhistogram.version>2.2.2</hdrhistogram.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.epam.reportportal</groupId>
+                <artifactId>rp-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epam.reportportal</groupId>
+                <artifactId>client-java</artifactId>
+                <version>${reportportal.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epam.reportportal</groupId>
+                <artifactId>commons-model</artifactId>
+                <version>${reportportal.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hdrhistogram</groupId>
+                <artifactId>HdrHistogram</artifactId>
+                <version>${hdrhistogram.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <release>11</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.4.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>4.9.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
