@@ -15,6 +15,8 @@
 # That workflow pulls already-published GitHub Packages artifacts and uploads them to Maven Central.
 # SONATYPE_USER / SONATYPE_PASSWORD come from organization secrets.
 # Run the Release workflow first: its `packages` job is what puts the artifacts on GitHub Packages.
+# Every suffix must exist in GitHub Packages: the shared workflow downloads with `curl -f` under
+# `bash -e`, so a single 404 fails the job. Maven emits no Gradle `.module` metadata.
 
 name: Publish to Maven Central
 
@@ -32,7 +34,7 @@ jobs:
     with:
       version: ${{ github.event.inputs.version }}
       artifact: commons-performance
-      package_suffixes: '-javadoc.jar,-javadoc.jar.asc,-javadoc.jar.md5,-javadoc.jar.sha1,-javadoc.jar.sha256,-javadoc.jar.sha512,-sources.jar,-sources.jar.asc,-sources.jar.md5,-sources.jar.sha1,-sources.jar.sha256,-sources.jar.sha512,.jar,.jar.asc,.jar.md5,.jar.sha1,.jar.sha256,.jar.sha512,.pom,.pom.asc,.pom.md5,.pom.sha1,.pom.sha256,.pom.sha512,.module,.module.asc,.module.md5,.module.sha1,.module.sha256,.module.sha512'
+      package_suffixes: '-javadoc.jar,-javadoc.jar.asc,-javadoc.jar.md5,-javadoc.jar.sha1,-javadoc.jar.sha256,-javadoc.jar.sha512,-sources.jar,-sources.jar.asc,-sources.jar.md5,-sources.jar.sha1,-sources.jar.sha256,-sources.jar.sha512,.jar,.jar.asc,.jar.md5,.jar.sha1,.jar.sha256,.jar.sha512,.pom,.pom.asc,.pom.md5,.pom.sha1,.pom.sha256,.pom.sha512'
     secrets:
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
@@ -43,7 +45,7 @@ jobs:
     with:
       version: ${{ github.event.inputs.version }}
       artifact: plugin-gatling-akka
-      package_suffixes: '-javadoc.jar,-javadoc.jar.asc,-javadoc.jar.md5,-javadoc.jar.sha1,-javadoc.jar.sha256,-javadoc.jar.sha512,-sources.jar,-sources.jar.asc,-sources.jar.md5,-sources.jar.sha1,-sources.jar.sha256,-sources.jar.sha512,.jar,.jar.asc,.jar.md5,.jar.sha1,.jar.sha256,.jar.sha512,.pom,.pom.asc,.pom.md5,.pom.sha1,.pom.sha256,.pom.sha512,.module,.module.asc,.module.md5,.module.sha1,.module.sha256,.module.sha512'
+      package_suffixes: '-javadoc.jar,-javadoc.jar.asc,-javadoc.jar.md5,-javadoc.jar.sha1,-javadoc.jar.sha256,-javadoc.jar.sha512,-sources.jar,-sources.jar.asc,-sources.jar.md5,-sources.jar.sha1,-sources.jar.sha256,-sources.jar.sha512,.jar,.jar.asc,.jar.md5,.jar.sha1,.jar.sha256,.jar.sha512,.pom,.pom.asc,.pom.md5,.pom.sha1,.pom.sha256,.pom.sha512'
     secrets:
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
