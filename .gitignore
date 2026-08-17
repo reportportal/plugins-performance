@@ -1,4 +1,5 @@
 target/
+.m2/
 dependency-reduced-pom.xml
 .flattened-pom.xml
 !.mvn/wrapper/maven-wrapper.jar

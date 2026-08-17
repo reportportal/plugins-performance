@@ -15,6 +15,8 @@
     <packaging>jar</packaging>
     <name>ReportPortal Gatling Plugin (Akka)</name>
     <description>Gatling 3.6–3.9 (Scala/Akka) DataWriter integration with ReportPortal</description>
+    <!-- Set explicitly: inherited URLs get the module directory appended. -->
+    <url>https://github.com/reportportal/plugins-performance</url>
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>

@@ -14,6 +14,7 @@
 # Delegates to https://github.com/reportportal/.github/blob/main/.github/workflows/maven-publish.yml
 # That workflow pulls already-published GitHub Packages artifacts and uploads them to Maven Central.
 # SONATYPE_USER / SONATYPE_PASSWORD come from organization secrets.
+# Run the Release workflow first: its `packages` job is what puts the artifacts on GitHub Packages.
 
 name: Publish to Maven Central
 
@@ -26,8 +27,6 @@ on:
         type: string
 
 jobs:
-  # Artifacts must already exist on GitHub Packages:
-  #   https://maven.pkg.github.com/${{ github.repository }}/com/epam/reportportal/<artifact>/<version>/
   publish-commons-performance:
     uses: reportportal/.github/.github/workflows/maven-publish.yml@main
     with:
