@@ -1,19 +1,109 @@
 # ReportPortal Performance Plugins
 
-Report JMeter and Gatling load-test results to [ReportPortal](https://reportportal.io):
-aggregated latency percentiles, error rates, an SLA quality gate, and the details of
-failed requests.
+[![Java](https://img.shields.io/badge/Java-11%2B-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![ReportPortal](https://img.shields.io/badge/ReportPortal-5.x-39c2d7)](https://reportportal.io/)
+[![JMeter](https://img.shields.io/badge/JMeter-5.5-d22128?logo=apache&logoColor=white)](https://jmeter.apache.org/)
+[![Gatling](https://img.shields.io/badge/Gatling-3.6–3.9-ff9e2a)](https://gatling.io/)
+[![Maven Central](https://img.shields.io/maven-central/v/com.epam.reportportal/plugin-gatling-akka?label=Maven%20Central)](https://central.sonatype.com/artifact/com.epam.reportportal/plugin-gatling-akka)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Made with love](https://img.shields.io/badge/Made%20with-%E2%9D%A4%EF%B8%8F-ff69b4)](https://github.com/reportportal/plugins-performance)
 
-Repo: `reportportal/plugins-performance`
+Official [ReportPortal](https://reportportal.io) plugins for **JMeter** and **Gatling**.
+They report aggregated latency percentiles, error rates, an SLA quality gate, and the
+details of failed requests into a ReportPortal launch.
 
-| Module | Maven artifact | Role |
+Repository: [reportportal/plugins-performance](https://github.com/reportportal/plugins-performance)
+
+## Table of contents
+
+- [Modules](#modules)
+- [ReportPortal setup](#reportportal-setup)
+  - [Base URL](#base-url)
+  - [Project name](#project-name)
+  - [API token](#api-token)
+- [What ends up in ReportPortal](#what-ends-up-in-reportportal)
+- [JMeter plugin](#jmeter-plugin)
+  - [Install](#install)
+  - [Add and configure the Backend Listener](#add-and-configure-the-backend-listener)
+  - [Parameters](#parameters)
+  - [Verify the run](#verify-the-run)
+  - [HTML dashboard attachment](#html-dashboard-attachment)
+  - [Official vs community plugin](#official-vs-community-plugin)
+- [Gatling plugin](#gatling-plugin)
+- [Limitations](#limitations)
+- [Planned improvements](#planned-improvements)
+- [Build from source](#build-from-source)
+- [Release](#release)
+- [Publishing to Maven Central](#publishing-to-maven-central)
+- [License](#license)
+
+## Modules
+
+| Module | Artifact | Role |
 |---|---|---|
-| `commons-performance` | `com.epam.reportportal:commons-performance` | shared client, metrics, SLA |
-| `plugin-jmeter` | `com.epam.reportportal:plugin-jmeter` | JMeter Backend Listener (drop-in JAR only) |
-| `plugin-gatling-akka` | `com.epam.reportportal:plugin-gatling-akka` | Gatling 3.6–3.9 (Scala / Akka) |
-| `plugin-gatling-pekko` | `com.epam.reportportal:plugin-gatling-pekko` | Gatling 3.10+ (Pekko) — empty stub |
+| `commons-performance` | `com.epam.reportportal:commons-performance` | shared client, metrics, SLA (Maven Central) |
+| `plugin-jmeter` | drop-in `plugin-jmeter-*-shaded.jar` | JMeter Backend Listener (GitHub Releases only) |
+| `plugin-gatling-akka` | `com.epam.reportportal:plugin-gatling-akka` | Gatling 3.6–3.9 Scala / Akka (Maven Central) |
+| `plugin-gatling-pekko` | stub | Gatling 3.10+ Pekko — not implemented yet |
 
-Requirements: Java 11+, ReportPortal 5.x, JMeter 5.5 (compiled against) or Gatling 3.6–3.9.
+Requirements: **Java 11+**, **ReportPortal 5.x**, JMeter **5.5** (compile target) or Gatling **3.6–3.9**.
+
+## ReportPortal setup
+
+The plugins need three values: **base URL**, **project name**, and **API token**.
+They are the same for JMeter and Gatling; only the parameter names differ.
+
+### Base URL
+
+Use the root URL of your ReportPortal instance — the same host you open in the browser.
+
+| Correct | Incorrect |
+|---|---|
+| `https://demo.reportportal.io` | `https://demo.reportportal.io/ui/` |
+| `https://rp.example.com` | `https://rp.example.com/api/v1` |
+| `https://rp.example.com` | `https://rp.example.com/ui/#default_personal` |
+
+Rules:
+
+- Prefer **`https://`**. Plain `http://` works but the API token is sent unencrypted; the
+  plugin logs a warning.
+- Do **not** append `/ui`, `/api`, `/api/v1`, or a project path. The client adds the API
+  path itself.
+- No trailing slash required (`https://rp.example.com` and `https://rp.example.com/` are
+  both fine).
+
+### Project name
+
+This is the **project name** (slug), **not** the numeric database id.
+
+1. Open ReportPortal in the browser and select the project.
+2. Look at the address bar. The project name is the segment after `#`, for example:
+
+   ```text
+   https://demo.reportportal.io/ui/#my_project/dashboard
+                              ^^^^^^^^^^
+   ```
+
+3. Personal projects often look like `default_personal` or `john_smith_personal`.
+4. Put exactly that string into `Project_Name` (JMeter) or `rp.project` / `RP_PROJECT`
+   (Gatling).
+
+Wrong: `12345`, `My Project` (display title with spaces), or a UUID.
+Right: `my_project`, `default_personal`.
+
+### API token
+
+1. Sign in to ReportPortal.
+2. Open your **user avatar** → **Profile** (or **User profile**).
+3. Find **API keys** / **Access token** and generate or copy a token.
+4. Paste it into `API_Token` (JMeter) or `rp.api.key` / `RP_API_KEY` (Gatling).
+
+Treat the token like a password. Do not commit it to Git; prefer environment variables
+or a local config that stays out of the repository.
+
+The token must belong to a user who can create launches in the target project
+(typically PROJECT_MANAGER or MEMBER with reporting rights — exact role names depend on
+your ReportPortal version).
 
 ## What ends up in ReportPortal
 
@@ -31,36 +121,129 @@ The launch description holds the SLA table, so the quality gate is visible from 
 launch list. Response times are aggregated in memory with HdrHistogram — individual
 successful samples are never stored or sent.
 
-## JMeter
+## JMeter plugin
 
-1. Build or download `plugin-jmeter-<version>-shaded.jar` and drop it into
-   `$JMETER_HOME/lib/ext/`.
-2. Restart JMeter, add a **Backend Listener** to the test plan and set the
-   implementation class to `com.epam.reportportal.jmeter.PerformanceReporterClient`.
-3. Fill in the parameters.
+Implementation class (must match exactly):
+
+```text
+com.epam.reportportal.jmeter.PerformanceReporterClient
+```
+
+### Install
+
+**From GitHub Release (recommended)**
+
+1. Download `plugin-jmeter-1.0.0-shaded.jar` from
+   [JMeter 1.0.0 release](https://github.com/reportportal/plugins-performance/releases/tag/jmeter-v1.0.0).
+2. Copy it into `$JMETER_HOME/lib/ext/`.
+3. Restart JMeter (GUI or stop/start the CLI process).
+
+**From source**
+
+```bash
+./mvnw -pl plugin-jmeter -am package
+cp plugin-jmeter/target/plugin-jmeter-*-shaded.jar "$JMETER_HOME/lib/ext/"
+```
+
+Only the **`-shaded.jar`** belongs in `lib/ext`. The thin JAR without classifier is not
+self-contained.
+
+### Add and configure the Backend Listener
+
+1. Open your test plan in JMeter.
+2. Right-click the **Test Plan** (or a Thread Group) → **Add** → **Listener** →
+   **Backend Listener**.
+3. In **Backend Listener implementation**, select or type:
+
+   ```text
+   com.epam.reportportal.jmeter.PerformanceReporterClient
+   ```
+
+   If the class is missing from the dropdown, the shaded JAR is not on the classpath —
+   check `lib/ext` and restart JMeter.
+4. Fill the parameters table (see below). At minimum set:
+
+   | Parameter | Example |
+   |---|---|
+   | `ReportPortal_URL` | `https://rp.example.com` |
+   | `Project_Name` | `my_project` |
+   | `API_Token` | *(your token)* |
+   | `Launch_Name` | `Checkout load test` |
+
+5. Keep the Backend Listener **enabled**. Place it where it can see the samples you care
+   about (usually under the Test Plan so all Thread Groups are included).
+6. Run the plan from the GUI (**Start**) or non-GUI:
+
+   ```bash
+   jmeter -n -t my-plan.jmx -l results.jtl
+   ```
+
+### Parameters
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| `ReportPortal_URL` | `http://localhost:8080` | ReportPortal base URL (use `https://` in real setups) |
-| `Project_Name` | `default_personal` | target project |
-| `API_Token` | — | API token from your ReportPortal profile |
-| `Launch_Name` | `JMeter Performance Metrics` | launch name |
-| `Attach_HTML_Dashboard` | `true` | generate the native JMeter dashboard and attach it as a ZIP |
-| `SLA_P95_MS`, `SLA_P99_MS` | empty | latency thresholds in ms; empty disables the check |
-| `SLA_ERROR_RATE_PCT` | empty | max error rate in percent; empty disables the check |
-| `Sample_Include_Regex` | empty | only report labels matching this Java regex |
-| `Sample_Exclude_Regex` | empty | drop labels matching this Java regex (applied first) |
-| `Attribute_1` … `Attribute_5` | not listed | launch attributes, `key:value`, `key=value`, or a bare tag |
+| `ReportPortal_URL` | `http://localhost:8080` | ReportPortal base URL — see [Base URL](#base-url) |
+| `Project_Name` | `default_personal` | Project **name** (slug), not numeric id — see [Project name](#project-name) |
+| `API_Token` | `your_api_token_here` | User API token — see [API token](#api-token) |
+| `Launch_Name` | `JMeter Performance Metrics` | Name of the launch created in ReportPortal |
+| `Attach_HTML_Dashboard` | `true` | Generate the native JMeter HTML dashboard and attach it as a ZIP |
+| `SLA_P95_MS` | *(empty)* | Global p95 threshold in ms; empty disables the check |
+| `SLA_P99_MS` | *(empty)* | Global p99 threshold in ms; empty disables the check |
+| `SLA_ERROR_RATE_PCT` | *(empty)* | Global max error rate in percent; empty disables the check |
+| `Sample_Include_Regex` | *(empty)* | Only report labels matching this Java regex |
+| `Sample_Exclude_Regex` | *(empty)* | Drop labels matching this Java regex (applied first) |
+| `Attribute_1` … `Attribute_5` | *(not listed)* | Launch attributes: `key:value`, `key=value`, or a bare tag |
 
-The `Attribute_*` rows are not created by default — add them manually in the Backend
-Listener table when you need them.
+`Attribute_1` … `Attribute_5` are **not** created by default. Add rows manually in the
+Backend Listener parameters table when you need custom launch attributes.
 
-With `Attach_HTML_Dashboard=true` the plugin writes a temporary JTL file during the run,
-renders the standard HTML dashboard at the end, and uploads it as
-`jmeter-html-report.zip` under the summary item. Download and unzip it, then open
-`index.html`; ReportPortal cannot render the dashboard inline.
+Examples:
 
-## Gatling
+```text
+Attribute_1 = env:staging
+Attribute_2 = release=24.3
+Attribute_3 = nightly
+```
+
+### Verify the run
+
+After the test finishes:
+
+1. Open ReportPortal → your project → **Launches**.
+2. Find the launch named as in `Launch_Name` (status PASSED or FAILED depending on SLA /
+   failures).
+3. Open **Performance Summary Report** — Markdown tables with global and per-request
+   metrics, plus the SLA block if thresholds were set.
+4. Under **Scenario: …** open a request that failed — you should see up to 20 failed
+   sample steps with response details.
+
+If nothing appears in ReportPortal, check the JMeter log (`jmeter.log`) for ReportPortal
+HTTP errors: wrong URL, wrong project name, or invalid token are the usual causes.
+
+### HTML dashboard attachment
+
+With `Attach_HTML_Dashboard=true` the plugin writes a temporary JTL during the run,
+builds the standard JMeter HTML report at teardown, and uploads
+`jmeter-html-report.zip` under the summary item.
+
+Download the ZIP from the launch log, extract it, and open `index.html` in a browser.
+ReportPortal cannot render that dashboard inline. For large tests the ZIP can be heavy —
+set `Attach_HTML_Dashboard` to `false` if you do not need it.
+
+### Official vs community plugin
+
+There is a separate community Backend Listener in the Plugins Manager under id
+`jmeter.backendlistener.reportportal` (different vendor and class).
+
+| | Official (this repo) | Community |
+|---|---|---|
+| Class | `com.epam.reportportal.jmeter.PerformanceReporterClient` | `io.github.prasantmohanty…ReportPortalBackendClient` |
+| Vendor | ReportPortal | Prasanta Mohanty |
+| Source | [plugins-performance](https://github.com/reportportal/plugins-performance) | separate GitHub project |
+
+Use only **one** of them in a given test plan.
+
+## Gatling plugin
 
 Only the Akka-based line (Gatling 3.6–3.9, Scala) is supported. Add the plugin to the
 test classpath either as a Maven dependency:
@@ -77,6 +260,10 @@ test classpath either as a Maven dependency:
 or, for the Gatling bundle, by copying `plugin-gatling-akka-<version>-shaded.jar` into
 `$GATLING_HOME/lib/`. The shaded JAR deliberately excludes Gatling, Scala, SLF4J and
 Jackson, so it only works inside a Gatling runtime.
+
+ReportPortal credentials for Gatling use the same values as above
+([ReportPortal setup](#reportportal-setup)), exposed as `rp.endpoint` / `RP_ENDPOINT`,
+`rp.project` / `RP_PROJECT`, and `rp.api.key` / `RP_API_KEY` (see the config table below).
 
 ### Live mode (recommended)
 
