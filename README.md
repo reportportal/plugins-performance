@@ -129,6 +129,8 @@ Implementation class (must match exactly):
 com.epam.reportportal.jmeter.PerformanceReporterClient
 ```
 
+![JMeter Backend Listener configured for ReportPortal](media/reportportal-performance-launches.png)
+
 ### Install
 
 **From GitHub Release (recommended)**
