@@ -1,12 +1,10 @@
 package com.epam.reportportal.jmeter;
 
 import com.epam.reportportal.common.PerformanceReporter;
-import com.epam.reportportal.common.PerformanceSample;
 import com.epam.reportportal.common.SampleFilter;
 import com.epam.reportportal.common.SlaConfig;
 import com.epam.ta.reportportal.ws.model.attribute.ItemAttributesRQ;
 import org.apache.commons.io.FileUtils;
-import org.apache.jmeter.assertions.AssertionResult;
 import org.apache.jmeter.report.dashboard.ReportGenerator;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
@@ -74,7 +72,7 @@ public class ReportPortalService {
             writeJtlLine(sr);
         }
 
-        reporter.processSample(toPerformanceSample(sr));
+        reporter.processSample(JmeterSampleMapper.toPerformanceSample(sr));
     }
 
     public void shutdown() {
@@ -95,56 +93,23 @@ public class ReportPortalService {
         cleanTempFiles();
     }
 
-    private PerformanceSample toPerformanceSample(SampleResult sr) {
-        return new PerformanceSample(
-                sr.getSampleLabel(),
-                extractThreadGroupName(sr),
-                sr.getThreadName(),
-                sr.getTimeStamp(),
-                sr.getTime(),
-                sr.isSuccessful(),
-                sr.getResponseCode(),
-                sr.getResponseMessage(),
-                sr.getSamplerData(),
-                sr.getResponseDataAsString()
-        );
-    }
-
-    /**
-     * JMeter sets thread names as "{ThreadGroupName}-{threadNumber}".
-     */
-    private String extractThreadGroupName(SampleResult sr) {
-        String threadName = sr.getThreadName();
-        if (threadName == null || threadName.isEmpty()) {
-            return "Unknown";
-        }
-        int lastDash = threadName.lastIndexOf('-');
-        if (lastDash > 0) {
-            String suffix = threadName.substring(lastDash + 1);
-            if (suffix.matches("\\d+")) {
-                return threadName.substring(0, lastDash);
-            }
-        }
-        return threadName;
-    }
-
     private void writeJtlLine(SampleResult sr) {
         try {
             String line = String.format("%d,%d,%s,%s,%s,%s,%s,%b,%s,%d,%d,%d,%d,%s,%d,%d,%d\n",
                     sr.getTimeStamp(),
                     sr.getTime(),
-                    escapeCsv(sr.getSampleLabel()),
+                    JmeterSampleMapper.escapeCsv(sr.getSampleLabel()),
                     sr.getResponseCode(),
-                    escapeCsv(sr.getResponseMessage()),
-                    escapeCsv(sr.getThreadName()),
+                    JmeterSampleMapper.escapeCsv(sr.getResponseMessage()),
+                    JmeterSampleMapper.escapeCsv(sr.getThreadName()),
                     sr.getDataType(),
                     sr.isSuccessful(),
-                    escapeCsv(getFirstAssertionFailureMessage(sr)),
+                    JmeterSampleMapper.escapeCsv(JmeterSampleMapper.getFirstAssertionFailureMessage(sr)),
                     sr.getBytesAsLong(),
                     sr.getSentBytes(),
                     sr.getGroupThreads(),
                     sr.getAllThreads(),
-                    escapeCsv(sr.getUrlAsString()),
+                    JmeterSampleMapper.escapeCsv(sr.getUrlAsString()),
                     sr.getLatency(),
                     sr.getIdleTime(),
                     sr.getConnectTime()
@@ -214,16 +179,6 @@ public class ReportPortalService {
         }
     }
 
-    private String escapeCsv(String value) {
-        if (value == null) {
-            return "";
-        }
-        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
-            return "\"" + value.replace("\"", "\"\"") + "\"";
-        }
-        return value;
-    }
-
     private void cleanTempFiles() {
         try {
             if (tempJtlFile != null && tempJtlFile.exists()) {
@@ -233,18 +188,5 @@ public class ReportPortalService {
         } catch (IOException e) {
             logger.error("Failed to clean up temporary JTL file", e);
         }
-    }
-
-    private String getFirstAssertionFailureMessage(SampleResult sr) {
-        AssertionResult[] assertionResults = sr.getAssertionResults();
-        if (assertionResults != null && assertionResults.length > 0) {
-            for (AssertionResult ar : assertionResults) {
-                if (ar.isFailure() || ar.isError()) {
-                    String msg = ar.getFailureMessage();
-                    return msg != null ? msg : "Assertion Failed (No message)";
-                }
-            }
-        }
-        return "";
     }
 }

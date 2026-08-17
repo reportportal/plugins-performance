@@ -76,6 +76,9 @@ public class PerformanceReporterClient extends AbstractBackendListenerClient {
 
     @Override
     public void handleSampleResults(List<SampleResult> results, BackendListenerContext context) {
+        if (rpService == null || results == null) {
+            return;
+        }
         for (SampleResult sr : results) {
             rpService.processSample(sr);
         }

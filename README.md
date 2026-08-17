@@ -209,14 +209,16 @@ instead. Missing endpoint, token or project fails the run with an `IllegalStateE
 - Every run starts a new launch; attaching to an existing launch or a rerun is not
   supported. Other `client-java` options (proxy, `rp.mode`, batching, `rp.launch.uuid`) are
   ignored — only the settings above are read.
-- Drop-in shaded JARs bundle their dependencies without relocating them, so a host tool
-  shipping a different version of the same library can clash.
+- The Gatling drop-in shaded JAR still bundles dependencies without relocating them, so a
+  host Gatling runtime shipping a different version of the same library can clash. The
+  JMeter shaded JAR relocates jackson, okhttp, kotlin and related packages under
+  `com.epam.reportportal.jmeter.shaded.*`.
 
 ## Planned improvements
 
 - Gatling 3.10+ (Pekko) support in `plugin-gatling-pekko`.
 - Per-request SLA thresholds, plus throughput and error-type breakdowns.
-- Relocated packages in the shaded JARs to remove classpath conflicts.
+- Relocated packages in the Gatling shaded JAR to remove classpath conflicts.
 - Scenario names and response codes in post-run mode by parsing more of `simulation.log`.
 - Attaching Grafana panel snapshots for the run's time range next to the summary report.
 - Configurable label cap, failed-sample cap and histogram precision.
