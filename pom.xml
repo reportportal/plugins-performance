@@ -65,12 +65,14 @@
         <gatling.pekko.version>3.11.5</gatling.pekko.version>
         <scala.version>2.13.18</scala.version>
         <reportportal.client.version>5.2.2</reportportal.client.version>
-        <okhttp.version>4.10.0</okhttp.version>
+        <okhttp.version>4.12.0</okhttp.version>
         <gson.version>2.10.1</gson.version>
+        <jackson.version>2.12.7</jackson.version>
+        <jackson.databind.version>2.12.7.1</jackson.databind.version>
+        <commons.lang3.version>3.20.0</commons.lang3.version>
         <hdrhistogram.version>2.2.2</hdrhistogram.version>
         <slf4j.version>1.7.36</slf4j.version>
         <junit.version>5.10.2</junit.version>
-        <!-- Parent and plugin modules stay off Maven; libraries opt back in. -->
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
@@ -90,6 +92,32 @@
                 <groupId>com.epam.reportportal</groupId>
                 <artifactId>commons-model</artifactId>
                 <version>${reportportal.client.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons.lang3.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>

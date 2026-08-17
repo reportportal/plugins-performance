@@ -15,7 +15,6 @@
     <packaging>jar</packaging>
     <name>ReportPortal Gatling Plugin (Akka)</name>
     <description>Gatling 3.6–3.9 (Scala/Akka) DataWriter integration with ReportPortal</description>
-    <!-- Set explicitly: inherited URLs get the module directory appended. -->
     <url>https://github.com/reportportal/plugins-performance</url>
 
     <properties>
@@ -92,6 +91,7 @@
                                     <exclude>org.scala-lang:*</exclude>
                                     <exclude>org.slf4j:*</exclude>
                                     <exclude>com.typesafe.akka:*</exclude>
+                                    <exclude>com.fasterxml.jackson.core:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>
