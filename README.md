@@ -57,4 +57,4 @@ TODO: usage example, install notes.
 - JMeter: tag `jmeter-v1.0.0`, or Actions → Release → plugin `jmeter`
 - Gatling: tag `gatling-v1.0.0`, or plugin `gatling` (Akka JAR; Pekko is still a stub)
 - Both: tag `v1.0.0`, or plugin `all`
-- Maven Central: Actions → Publish to Maven Central (jobs commented until `SONATYPE_*` secrets exist)
+- Maven Central: Actions → Publish to Maven Central (`SONATYPE_*` are organization secrets)
