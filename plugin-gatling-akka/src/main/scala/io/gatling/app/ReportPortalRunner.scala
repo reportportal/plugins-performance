@@ -13,7 +13,7 @@ import io.gatling.core.stats.writer.RunMessage
 import io.netty.channel.EventLoopGroup
 
 /**
- * Lives in `io.gatling.app` because Gatling 3.6 keeps [[Runner]] package-private.
+ * Lives in `io.gatling.app` because Gatling 3.6 keeps `Runner` package-private.
  */
 class ReportPortalRunner(
     system: ActorSystem,
