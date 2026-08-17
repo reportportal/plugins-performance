@@ -5,19 +5,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.epam.reportportal</groupId>
-    <artifactId>load-testing-rp-plugins</artifactId>
+    <artifactId>plugins-performance</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
-    <name>Load Testing ReportPortal Plugins</name>
-    <description>Shared ReportPortal integration for JMeter and Gatling load-testing tools</description>
-    <url>https://github.com/reportportal/plugin-jmeter</url>
+    <name>ReportPortal Performance Plugins</name>
+    <description>ReportPortal plugins for JMeter and Gatling performance tests</description>
+    <url>https://github.com/reportportal/plugins-performance</url>
 
     <modules>
-        <module>rp-common</module>
-        <module>jmeter-plugin</module>
-        <module>gatling-akka</module>
-        <module>gatling-pekko</module>
+        <module>commons-performance</module>
+        <module>plugin-jmeter</module>
+        <module>plugin-gatling-akka</module>
+        <module>plugin-gatling-pekko</module>
     </modules>
 
     <licenses>
@@ -30,15 +30,18 @@
 
     <developers>
         <developer>
+            <id>reportportal</id>
+            <name>ReportPortal Team</name>
             <organization>ReportPortal.io</organization>
             <organizationUrl>https://reportportal.io</organizationUrl>
         </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/reportportal/plugin-jmeter.git</connection>
-        <developerConnection>scm:git:ssh://github.com:reportportal/plugin-jmeter.git</developerConnection>
-        <url>https://github.com/reportportal/plugin-jmeter</url>
+        <connection>scm:git:git://github.com/reportportal/plugins-performance.git</connection>
+        <developerConnection>scm:git:ssh://github.com:reportportal/plugins-performance.git</developerConnection>
+        <url>https://github.com/reportportal/plugins-performance</url>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
@@ -57,13 +60,15 @@
         <hdrhistogram.version>2.2.2</hdrhistogram.version>
         <slf4j.version>1.7.36</slf4j.version>
         <junit.version>5.10.2</junit.version>
+        <!-- Parent and plugin modules stay off Maven; libraries opt back in. -->
+        <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>com.epam.reportportal</groupId>
-                <artifactId>rp-common</artifactId>
+                <artifactId>commons-performance</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -131,6 +136,25 @@
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>4.9.2</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>flatten-maven-plugin</artifactId>
+                    <version>1.6.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                    <configuration>
+                        <failOnError>false</failOnError>
+                        <doclint>none</doclint>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -138,6 +162,76 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <!--
+      Prepares Central-valid artifacts (flattened POM, sources, javadoc).
+      Does not sign or upload: that needs org Sonatype / GPG credentials.
+    -->
+    <profiles>
+        <profile>
+            <id>maven-central</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>flatten-maven-plugin</artifactId>
+                        <configuration>
+                            <updatePomFile>true</updatePomFile>
+                            <flattenMode>oss</flattenMode>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

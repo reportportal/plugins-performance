@@ -1,0 +1,62 @@
+# Copyright 2025 EPAM Systems
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Delegates to https://github.com/reportportal/.github/blob/main/.github/workflows/maven-publish.yml
+# That workflow pulls already-published GitHub Packages artifacts and uploads them to Maven Central.
+# Uncomment the publish jobs after SONATYPE_USER / SONATYPE_PASSWORD are available on this repo.
+
+name: Publish to Maven Central
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  waiting-for-credentials:
+    name: Sonatype credentials not configured
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain how to enable publish
+        run: |
+          echo "SONATYPE_USER / SONATYPE_PASSWORD are not wired yet."
+          echo "After the org adds those secrets, uncomment publish-commons-performance"
+          echo "and publish-plugin-gatling-akka in this workflow."
+          echo "Requested version: ${{ github.event.inputs.version }}"
+
+  # Artifacts must already exist on GitHub Packages:
+  #   https://maven.pkg.github.com/${{ github.repository }}/com/epam/reportportal/<artifact>/<version>/
+  #
+  # publish-commons-performance:
+  #   uses: reportportal/.github/.github/workflows/maven-publish.yml@main
+  #   with:
+  #     version: ${{ github.event.inputs.version }}
+  #     artifact: commons-performance
+  #     package_suffixes: '-javadoc.jar,-javadoc.jar.asc,-javadoc.jar.md5,-javadoc.jar.sha1,-javadoc.jar.sha256,-javadoc.jar.sha512,-sources.jar,-sources.jar.asc,-sources.jar.md5,-sources.jar.sha1,-sources.jar.sha256,-sources.jar.sha512,.jar,.jar.asc,.jar.md5,.jar.sha1,.jar.sha256,.jar.sha512,.pom,.pom.asc,.pom.md5,.pom.sha1,.pom.sha256,.pom.sha512,.module,.module.asc,.module.md5,.module.sha1,.module.sha256,.module.sha512'
+  #   secrets:
+  #     SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+  #     SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+  #
+  # publish-plugin-gatling-akka:
+  #   needs: publish-commons-performance
+  #   uses: reportportal/.github/.github/workflows/maven-publish.yml@main
+  #   with:
+  #     version: ${{ github.event.inputs.version }}
+  #     artifact: plugin-gatling-akka
+  #     package_suffixes: '-javadoc.jar,-javadoc.jar.asc,-javadoc.jar.md5,-javadoc.jar.sha1,-javadoc.jar.sha256,-javadoc.jar.sha512,-sources.jar,-sources.jar.asc,-sources.jar.md5,-sources.jar.sha1,-sources.jar.sha256,-sources.jar.sha512,.jar,.jar.asc,.jar.md5,.jar.sha1,.jar.sha256,.jar.sha512,.pom,.pom.asc,.pom.md5,.pom.sha1,.pom.sha256,.pom.sha512,.module,.module.asc,.module.md5,.module.sha1,.module.sha256,.module.sha512'
+  #   secrets:
+  #     SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+  #     SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

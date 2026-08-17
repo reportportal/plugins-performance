@@ -6,15 +6,19 @@
 
     <parent>
         <groupId>com.epam.reportportal</groupId>
-        <artifactId>load-testing-rp-plugins</artifactId>
+        <artifactId>plugins-performance</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>rp-common</artifactId>
+    <artifactId>commons-performance</artifactId>
     <packaging>jar</packaging>
-    <name>ReportPortal Common</name>
-    <description>Tool-agnostic ReportPortal client, DTOs, and performance reporting utilities</description>
+    <name>ReportPortal Commons Performance</name>
+    <description>Shared ReportPortal client, SLA, and metrics for performance plugins</description>
+
+    <properties>
+        <maven.deploy.skip>false</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <dependency>

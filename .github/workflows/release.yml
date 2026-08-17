@@ -59,22 +59,22 @@ jobs:
             jmeter)
               TAG="jmeter-v${VERSION}"
               TITLE="JMeter ${VERSION}"
-              MODULES="jmeter-plugin"
-              FILES="jmeter-plugin/target/plugin-jmeter-reportportal-*.jar"
+              MODULES="plugin-jmeter"
+              FILES="plugin-jmeter/target/plugin-jmeter-*-shaded.jar"
               ;;
             gatling)
               TAG="gatling-v${VERSION}"
               TITLE="Gatling ${VERSION}"
-              MODULES="gatling-akka,gatling-pekko"
-              FILES="gatling-akka/target/plugin-gatling-akka-reportportal-*.jar"
+              MODULES="plugin-gatling-akka,plugin-gatling-pekko"
+              FILES="plugin-gatling-akka/target/plugin-gatling-akka-*-shaded.jar"
               ;;
             all)
               TAG="v${VERSION}"
               TITLE="Release ${VERSION}"
-              MODULES="jmeter-plugin,gatling-akka,gatling-pekko"
+              MODULES="plugin-jmeter,plugin-gatling-akka,plugin-gatling-pekko"
               FILES="$(printf '%s\n' \
-                'jmeter-plugin/target/plugin-jmeter-reportportal-*.jar' \
-                'gatling-akka/target/plugin-gatling-akka-reportportal-*.jar')"
+                'plugin-jmeter/target/plugin-jmeter-*-shaded.jar' \
+                'plugin-gatling-akka/target/plugin-gatling-akka-*-shaded.jar')"
               ;;
             *)
               echo "Unknown plugin: $PLUGIN"

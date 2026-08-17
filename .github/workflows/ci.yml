@@ -32,28 +32,40 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: ./mvnw -B clean package
+        run: ./mvnw -B -Pmaven-central clean package
+
+      - name: Check Maven Central artifacts
+        run: |
+          set -euo pipefail
+          require() { ls "$1" >/dev/null; }
+          require 'commons-performance/target/commons-performance-*-sources.jar'
+          require 'commons-performance/target/commons-performance-*-javadoc.jar'
+          require 'plugin-gatling-akka/target/plugin-gatling-akka-*-sources.jar'
+          require 'plugin-gatling-akka/target/plugin-gatling-akka-*-javadoc.jar'
+          require 'plugin-gatling-akka/target/plugin-gatling-akka-*-shaded.jar'
+          ls commons-performance/target/commons-performance-*.jar | grep -vE -- '-(sources|javadoc|shaded)\.jar$'
+          ls plugin-gatling-akka/target/plugin-gatling-akka-*.jar | grep -vE -- '-(sources|javadoc|shaded)\.jar$'
 
       - name: Upload JMeter plugin
         uses: actions/upload-artifact@v7
         with:
-          name: plugin-jmeter-reportportal
-          path: jmeter-plugin/target/plugin-jmeter-reportportal-*.jar
+          name: plugin-jmeter
+          path: plugin-jmeter/target/plugin-jmeter-*-shaded.jar
           if-no-files-found: error
           retention-days: 14
 
       - name: Upload Gatling Akka plugin
         uses: actions/upload-artifact@v7
         with:
-          name: plugin-gatling-akka-reportportal
-          path: gatling-akka/target/plugin-gatling-akka-reportportal-*.jar
+          name: plugin-gatling-akka
+          path: plugin-gatling-akka/target/plugin-gatling-akka-*-shaded.jar
           if-no-files-found: error
           retention-days: 14
 
       - name: Upload Gatling Pekko plugin
         uses: actions/upload-artifact@v7
         with:
-          name: plugin-gatling-pekko-reportportal
-          path: gatling-pekko/target/*.jar
+          name: plugin-gatling-pekko
+          path: plugin-gatling-pekko/target/plugin-gatling-pekko-*.jar
           if-no-files-found: warn
           retention-days: 14

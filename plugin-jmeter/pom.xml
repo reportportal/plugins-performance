@@ -6,20 +6,20 @@
 
     <parent>
         <groupId>com.epam.reportportal</groupId>
-        <artifactId>load-testing-rp-plugins</artifactId>
+        <artifactId>plugins-performance</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>plugin-jmeter-reportportal</artifactId>
+    <artifactId>plugin-jmeter</artifactId>
     <packaging>jar</packaging>
-    <name>JMeter ReportPortal Plugin</name>
+    <name>ReportPortal JMeter Plugin</name>
     <description>JMeter Backend Listener that reports performance metrics and failures to ReportPortal</description>
 
     <dependencies>
         <dependency>
             <groupId>com.epam.reportportal</groupId>
-            <artifactId>rp-common</artifactId>
+            <artifactId>commons-performance</artifactId>
         </dependency>
 
         <!-- Provided by JMeter at runtime -->
@@ -43,7 +43,6 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -55,6 +54,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded</shadedClassifierName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <excludes>

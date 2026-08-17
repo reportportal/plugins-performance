@@ -1,13 +1,15 @@
-# Load Testing ReportPortal Plugins
+# ReportPortal Performance Plugins
 
 ReportPortal integration for JMeter and Gatling.
 
-Modules:
+Repo: `reportportal/plugins-performance`
 
-- `rp-common` — shared reporting / SLA
-- `jmeter-plugin` — Backend Listener
-- `gatling-akka` — Gatling 3.6–3.9 (Akka)
-- `gatling-pekko` — Gatling 3.10+ (Pekko)
+| Module | Maven artifact | Role |
+|---|---|---|
+| `commons-performance` | `com.epam.reportportal:commons-performance` | shared library |
+| `plugin-jmeter` | `com.epam.reportportal:plugin-jmeter` | JMeter Backend Listener |
+| `plugin-gatling-akka` | `com.epam.reportportal:plugin-gatling-akka` | Gatling 3.6–3.9 |
+| `plugin-gatling-pekko` | `com.epam.reportportal:plugin-gatling-pekko` | Gatling 3.10+ (stub) |
 
 Java 11+.
 
@@ -15,13 +17,19 @@ Java 11+.
 
 ```bash
 ./mvnw clean package
+./mvnw -Pmaven-central package   # sources + javadoc + flattened POM
 ```
 
-JARs land in each module's `target/`.
+Drop-in plugins: `*-shaded.jar` in each module `target/`.
+Maven artifacts: thin `commons-performance` / `plugin-gatling-akka` jars (no shade).
+
+```bash
+./mvnw -Pmaven-central install -pl commons-performance,plugin-gatling-akka -am
+```
 
 ## JMeter
 
-Drop `plugin-jmeter-reportportal-*.jar` into `$JMETER_HOME/lib/ext/`.
+Drop `plugin-jmeter-*-shaded.jar` into `$JMETER_HOME/lib/ext/`.
 
 Backend Listener class: `com.epam.reportportal.jmeter.PerformanceReporterClient`
 
@@ -49,3 +57,4 @@ TODO: usage example, install notes.
 - JMeter: tag `jmeter-v1.0.0`, or Actions → Release → plugin `jmeter`
 - Gatling: tag `gatling-v1.0.0`, or plugin `gatling` (Akka JAR; Pekko is still a stub)
 - Both: tag `v1.0.0`, or plugin `all`
+- Maven Central: Actions → Publish to Maven Central (jobs commented until `SONATYPE_*` secrets exist)

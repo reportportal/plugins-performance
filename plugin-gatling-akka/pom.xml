@@ -6,20 +6,24 @@
 
     <parent>
         <groupId>com.epam.reportportal</groupId>
-        <artifactId>load-testing-rp-plugins</artifactId>
+        <artifactId>plugins-performance</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>gatling-akka</artifactId>
+    <artifactId>plugin-gatling-akka</artifactId>
     <packaging>jar</packaging>
-    <name>Gatling ReportPortal Plugin (Akka / Scala)</name>
-    <description>Legacy Gatling (&lt;= 3.9, Scala/Akka) DataWriter integration with ReportPortal</description>
+    <name>ReportPortal Gatling Plugin (Akka)</name>
+    <description>Gatling 3.6–3.9 (Scala/Akka) DataWriter integration with ReportPortal</description>
+
+    <properties>
+        <maven.deploy.skip>false</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.epam.reportportal</groupId>
-            <artifactId>rp-common</artifactId>
+            <artifactId>commons-performance</artifactId>
         </dependency>
         <dependency>
             <groupId>io.gatling</groupId>
@@ -47,7 +51,6 @@
     </dependencies>
 
     <build>
-        <finalName>plugin-gatling-akka-reportportal-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
@@ -78,6 +81,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded</shadedClassifierName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <excludes>
@@ -103,4 +108,26 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>maven-central</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>net.alchim31.maven</groupId>
+                        <artifactId>scala-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-scaladocs</id>
+                                <goals>
+                                    <goal>doc-jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

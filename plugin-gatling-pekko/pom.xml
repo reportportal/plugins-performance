@@ -6,20 +6,20 @@
 
     <parent>
         <groupId>com.epam.reportportal</groupId>
-        <artifactId>load-testing-rp-plugins</artifactId>
+        <artifactId>plugins-performance</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>gatling-pekko</artifactId>
+    <artifactId>plugin-gatling-pekko</artifactId>
     <packaging>jar</packaging>
-    <name>Gatling ReportPortal Plugin (Pekko / Java)</name>
-    <description>Modern Gatling (&gt;= 3.10, Java/Pekko) plugin integration with ReportPortal</description>
+    <name>ReportPortal Gatling Plugin (Pekko)</name>
+    <description>Gatling 3.10+ (Java/Pekko) plugin integration with ReportPortal</description>
 
     <dependencies>
         <dependency>
             <groupId>com.epam.reportportal</groupId>
-            <artifactId>rp-common</artifactId>
+            <artifactId>commons-performance</artifactId>
         </dependency>
         <dependency>
             <groupId>io.gatling</groupId>
