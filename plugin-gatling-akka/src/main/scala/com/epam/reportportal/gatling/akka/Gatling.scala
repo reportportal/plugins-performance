@@ -6,8 +6,9 @@ import io.gatling.core.scenario.Simulation
 /**
  * Drop-in replacement for `io.gatling.app.Gatling` that reports every request to ReportPortal.
  *
- * Configure the Gatling Maven plugin (or bundle) main class as
- * `com.epam.reportportal.gatling.akka.Gatling`.
+ * `gatling-maven-plugin` and `gatling-sbt` hardcode `io.gatling.app.Gatling`, so the swap has to
+ * happen in the launcher: the bundle's `gatling.sh`, an `exec-maven-plugin` execution, or a custom
+ * runner. Otherwise mix in [[ReportPortalSimulation]].
  */
 object Gatling {
 
