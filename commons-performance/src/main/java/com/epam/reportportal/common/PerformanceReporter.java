@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,6 +35,7 @@ public class PerformanceReporter {
     private final Map<String, AtomicInteger> requestFailureCounts = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> reportedFailedSamples = new ConcurrentHashMap<>();
     private final Set<String> failureLimitNotices = ConcurrentHashMap.newKeySet();
+    private final AtomicBoolean labelOverflowReported = new AtomicBoolean();
 
     private Maybe<String> summaryItemUuid;
     private SlaConfig slaConfig = new SlaConfig(null, null, null);
@@ -57,8 +59,27 @@ public class PerformanceReporter {
     }
 
     public void processSample(PerformanceSample sample) {
-        statsCollector.registerSample(sample);
-        reportSampleHistory(sample);
+        String label = trackedLabel(sample);
+        statsCollector.registerSample(label, sample.getDurationMs(), sample.isSuccess());
+        reportSampleHistory(sample, label);
+    }
+
+    /**
+     * Keeps the number of reported request names bounded. Every new name allocates a histogram,
+     * six map entries and a ReportPortal item, so dynamic names would exhaust heap and flood the API.
+     */
+    private String trackedLabel(PerformanceSample sample) {
+        String label = sample.getLabel();
+        if (requestSuites.size() < PerformanceStatsCollector.MAX_TRACKED_NAMES
+                || requestSuites.containsKey(requestKey(sample.getScenarioName(), label))) {
+            return label;
+        }
+
+        if (labelOverflowReported.compareAndSet(false, true)) {
+            logger.warn("Reached {} distinct request names; the rest are reported under '{}'.",
+                    PerformanceStatsCollector.MAX_TRACKED_NAMES, PerformanceStatsCollector.OVERFLOW_NAME);
+        }
+        return PerformanceStatsCollector.OVERFLOW_NAME;
     }
 
     /**
@@ -67,9 +88,8 @@ public class PerformanceReporter {
      * 2) Request label (SUITE)
      * 3) Failed sample STEPs only (capped at {@link #MAX_FAILED_SAMPLES_PER_REQUEST})
      */
-    private void reportSampleHistory(PerformanceSample sample) {
+    private void reportSampleHistory(PerformanceSample sample, String label) {
         String scenarioName = sample.getScenarioName();
-        String label = sample.getLabel();
         String requestKey = requestKey(scenarioName, label);
 
         Maybe<String> scenarioUuid = scenarioSuites.computeIfAbsent(scenarioName, name ->

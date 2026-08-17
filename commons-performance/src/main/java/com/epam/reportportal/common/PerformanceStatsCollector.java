@@ -1,9 +1,12 @@
 package com.epam.reportportal.common;
 
 import org.HdrHistogram.ConcurrentHistogram;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -12,10 +15,21 @@ import java.util.concurrent.atomic.LongAdder;
  * Does not retain individual response times.
  */
 public class PerformanceStatsCollector {
+    private static final Logger logger = LoggerFactory.getLogger(PerformanceStatsCollector.class);
 
-    // Highest trackable latency: 1 hour. 3 significant digits ≈ fixed ~tens of KB per histogram.
+    // Highest trackable latency: 1 hour. 2 significant digits (1% precision) costs ~32 KB per
+    // histogram; 3 digits would cost ~208 KB, which only pays off with few request names.
     private static final long HIGHEST_TRACKABLE_VALUE_MS = 3_600_000L;
-    private static final int SIGNIFICANT_DIGITS = 3;
+    private static final int SIGNIFICANT_DIGITS = 2;
+
+    /**
+     * Upper bound on distinct request names. Simulations that build names dynamically
+     * (an id in the name) would otherwise grow memory and the reported tree without limit.
+     */
+    public static final int MAX_TRACKED_NAMES = 1000;
+
+    /** Request name that absorbs everything past {@link #MAX_TRACKED_NAMES}. */
+    public static final String OVERFLOW_NAME = "(other requests)";
 
     public static class SamplerStats {
         public final String name;
@@ -122,13 +136,33 @@ public class PerformanceStatsCollector {
     }
 
     private final Map<String, SamplerStats> statsMap = new ConcurrentHashMap<>();
+    private final AtomicBoolean overflowReported = new AtomicBoolean();
 
     public void registerSample(PerformanceSample sample) {
         registerSample(sample.getLabel(), sample.getDurationMs(), sample.isSuccess());
     }
 
     public void registerSample(String name, long durationMs, boolean success) {
-        statsMap.computeIfAbsent(name, SamplerStats::new).addSample(durationMs, success);
+        statsFor(name).addSample(durationMs, success);
+    }
+
+    private SamplerStats statsFor(String name) {
+        // Plain get() first: computeIfAbsent locks the bin whenever the key is not its first node.
+        SamplerStats existing = statsMap.get(name);
+        if (existing != null) {
+            return existing;
+        }
+
+        if (statsMap.size() >= MAX_TRACKED_NAMES) {
+            if (overflowReported.compareAndSet(false, true)) {
+                logger.warn("Reached {} distinct request names; the rest are merged into '{}'. "
+                                + "Request names that embed dynamic values make per-request metrics unusable.",
+                        MAX_TRACKED_NAMES, OVERFLOW_NAME);
+            }
+            return statsMap.computeIfAbsent(OVERFLOW_NAME, SamplerStats::new);
+        }
+
+        return statsMap.computeIfAbsent(name, SamplerStats::new);
     }
 
     public Map<String, SamplerStats> getStatsMap() {

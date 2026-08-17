@@ -63,6 +63,24 @@ class ReportPortalPluginConfigTest {
   }
 
   @Test
+  def toString_doesNotExposeApiToken(): Unit = {
+    val config = ConfigFactory.parseString(
+      """
+        |gatling.reportportal {
+        |  endpoint = "http://rp.example"
+        |  apiKey = "super-secret-token"
+        |  project = "proj"
+        |}
+        |""".stripMargin
+    )
+
+    val rendered = ReportPortalPluginConfig.load(config, _ => None, _ => None).toString
+
+    assertFalse(rendered.contains("super-secret-token"))
+    assertTrue(rendered.contains(ReportPortalPluginConfig.RedactedToken))
+  }
+
+  @Test
   def load_failsWhenEndpointMissing(): Unit = {
     assertThrows(
       classOf[IllegalStateException],

@@ -39,6 +39,7 @@ public class ReportPortalClient {
     public void startLaunch(String endpoint, String apiToken, String project, String launchName,
                             Collection<ItemAttributesRQ> attributes) {
         logger.info("Initializing ReportPortal client");
+        warnIfNotEncrypted(endpoint);
 
         ListenerParameters params = new ListenerParameters();
         params.setBaseUrl(endpoint);
@@ -69,6 +70,17 @@ public class ReportPortalClient {
 
         this.launch = rp.newLaunch(startLaunchRQ);
         this.launch.start();
+    }
+
+    static boolean isPlainHttp(String endpoint) {
+        return endpoint != null && endpoint.trim().regionMatches(true, 0, "http://", 0, 7);
+    }
+
+    private static void warnIfNotEncrypted(String endpoint) {
+        if (isPlainHttp(endpoint)) {
+            logger.warn("ReportPortal endpoint {} uses plain HTTP, so the API token is sent unencrypted. "
+                    + "Prefer https://", endpoint);
+        }
     }
 
     public Maybe<String> startRootItem(String name, String type, Date startTime) {

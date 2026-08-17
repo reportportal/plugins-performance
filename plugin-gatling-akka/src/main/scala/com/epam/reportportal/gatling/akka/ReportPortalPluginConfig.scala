@@ -25,10 +25,18 @@ final case class ReportPortalPluginConfig(
     slaConfig: SlaConfig,
     sampleFilter: SampleFilter,
     customAttributes: JList[ItemAttributesRQ]
-)
+) {
+
+  /** Overridden because the generated case class `toString` would print the API token. */
+  override def toString: String =
+    s"ReportPortalPluginConfig(endpoint=$endpoint, " +
+      s"apiToken=${ReportPortalPluginConfig.RedactedToken}, " +
+      s"project=$project, launchName=$launchName)"
+}
 
 object ReportPortalPluginConfig {
   val DefaultLaunchName = "Gatling Performance Metrics"
+  val RedactedToken = "***"
 
   def load(): ReportPortalPluginConfig = load(ConfigFactory.load())
 
