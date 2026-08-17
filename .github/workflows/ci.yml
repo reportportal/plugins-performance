@@ -37,7 +37,14 @@ jobs:
       - name: Check Maven Central artifacts
         run: |
           set -euo pipefail
-          require() { ls "$1" >/dev/null; }
+          shopt -s nullglob
+          require() {
+            local files=( $1 )
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "missing: $1" >&2
+              exit 1
+            fi
+          }
           require 'commons-performance/target/commons-performance-*-sources.jar'
           require 'commons-performance/target/commons-performance-*-javadoc.jar'
           require 'plugin-gatling-akka/target/plugin-gatling-akka-*-sources.jar'
