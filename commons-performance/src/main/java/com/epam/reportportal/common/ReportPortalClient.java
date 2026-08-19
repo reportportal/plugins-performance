@@ -121,6 +121,41 @@ public class ReportPortalClient {
         });
     }
 
+
+    public void saveLogSync(Maybe<String> itemUuid, Function<String, SaveLogRQ> logSupplier) {
+        if (launch == null) {
+            return;
+        }
+        try {
+            String resolvedUuid = itemUuid.blockingGet();
+            SaveLogRQ rq = logSupplier.apply(resolvedUuid);
+            rq.setItemUuid(resolvedUuid);
+            launch.getClient().log(rq).blockingGet();
+        } catch (HttpException e) {
+            try {
+                String errorBody = e.response().errorBody() != null
+                        ? e.response().errorBody().string()
+                        : "Empty response body";
+                logger.error("ReportPortal saveLog rejected request. HTTP status: {}, details: {}",
+                        e.code(), errorBody);
+            } catch (Exception ioException) {
+                logger.error("Failed to read HTTP error response body", ioException);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to save log to ReportPortal", e);
+        }
+    }
+
+    public void saveLogSync(Maybe<String> itemUuid, String level, String message, Date logTime) {
+        saveLogSync(itemUuid, resolvedUuid -> {
+            SaveLogRQ rq = new SaveLogRQ();
+            rq.setLevel(level);
+            rq.setMessage(message);
+            rq.setLogTime(logTime);
+            return rq;
+        });
+    }
+
     public void finishLaunch(String status, Date endTime) {
         logger.info("Finishing ReportPortal launch");
         FinishExecutionRQ finishLaunch = new FinishExecutionRQ();
