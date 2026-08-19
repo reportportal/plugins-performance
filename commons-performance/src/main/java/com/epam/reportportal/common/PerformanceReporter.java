@@ -92,14 +92,16 @@ public class PerformanceReporter {
         String scenarioName = sample.getScenarioName();
         String requestKey = requestKey(scenarioName, label);
 
+        Date sampleTime = new Date(sample.getTimestamp());
+
         Maybe<String> scenarioUuid = scenarioSuites.computeIfAbsent(scenarioName, name ->
-                client.startRootItem("Scenario: " + name, "SUITE", Calendar.getInstance().getTime()));
+                client.startRootItem("Scenario: " + name, "SUITE", sampleTime));
 
         Maybe<String> requestUuid = requestSuites.computeIfAbsent(requestKey, key -> {
             scenarioRequestKeys
                     .computeIfAbsent(scenarioName, ignored -> ConcurrentHashMap.newKeySet())
                     .add(requestKey);
-            return client.startChildItem(scenarioUuid, label, "SUITE", Calendar.getInstance().getTime());
+            return client.startChildItem(scenarioUuid, label, "SUITE", sampleTime);
         });
 
         if (sample.isSuccess()) {
@@ -126,7 +128,7 @@ public class PerformanceReporter {
             return;
         }
 
-        Date startTime = new Date(sample.getTimestamp());
+        Date startTime = sampleTime;
         Maybe<String> stepUuid = client.startChildItem(
                 requestUuid,
                 MetricsFormatter.sampleStepName(sample),
