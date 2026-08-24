@@ -148,8 +148,9 @@ public class PerformanceReporter {
     }
 
     public void attachFileToSummary(String message, byte[] content, String contentType, String fileName) {
-        client.saveLogSync(summaryItemUuid, resolvedUuid -> {
+        client.emitLog(summaryItemUuid, resolvedUuid -> {
             SaveLogRQ rq = new SaveLogRQ();
+            rq.setItemUuid(resolvedUuid);
             rq.setLevel("INFO");
             rq.setMessage(message);
             rq.setLogTime(Calendar.getInstance().getTime());
@@ -245,7 +246,7 @@ public class PerformanceReporter {
     }
 
     private void emitSummaryLog(String level, String message) {
-        client.saveLogSync(summaryItemUuid, level, message, Calendar.getInstance().getTime());
+        client.emitLog(summaryItemUuid, level, message, Calendar.getInstance().getTime());
     }
 
     private ItemAttributeResource createAttribute(String key, String value) {
