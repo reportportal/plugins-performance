@@ -2,6 +2,8 @@ package com.epam.reportportal.common;
 
 import com.epam.reportportal.listeners.ListenerParameters;
 import com.epam.reportportal.service.Launch;
+import com.epam.reportportal.service.LaunchImpl;
+import com.epam.reportportal.service.LoggingContext;
 import com.epam.reportportal.service.PathParamInterceptor;
 import com.epam.reportportal.service.ReportPortal;
 import com.epam.ta.reportportal.ws.model.FinishExecutionRQ;
@@ -14,6 +16,7 @@ import com.epam.ta.reportportal.ws.model.launch.StartLaunchRQ;
 import com.epam.ta.reportportal.ws.model.launch.UpdateLaunchRQ;
 import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
 import io.reactivex.Maybe;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.CookieJar;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -25,6 +28,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -119,6 +123,40 @@ public class ReportPortalClient {
             rq.setLogTime(logTime);
             return rq;
         });
+    }
+
+    /**
+     * Binds a {@link LoggingContext} for {@code itemUuid} to the current thread, runs {@code action}
+     * (so {@link #emitLog} works), then flushes that context.
+     * <p>
+     * Needed when logs are emitted on a different thread than the one that started the item —
+     * Gatling live {@code StatsEngine.stop} vs {@code start}.
+     */
+    public void withItemLoggingContext(Maybe<String> itemUuid, Runnable action) {
+        if (launch == null) {
+            action.run();
+            return;
+        }
+        io.reactivex.Scheduler scheduler = launch instanceof LaunchImpl
+                ? ((LaunchImpl) launch).getScheduler()
+                : Schedulers.io();
+        LoggingContext.init(
+                launch.getLaunch(),
+                itemUuid,
+                launch.getClient(),
+                scheduler,
+                launch.getParameters()
+        );
+        try {
+            action.run();
+        } finally {
+            try {
+                // Flush batched logs before finishItem / finishLaunch.
+                LoggingContext.complete().blockingAwait(30, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.error("Failed to flush ReportPortal logging context", e);
+            }
+        }
     }
 
     public void finishLaunch(String status, Date endTime) {

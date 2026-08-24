@@ -51,6 +51,8 @@ public class PerformanceReporter {
 
         client.startLaunch(endpoint, apiToken, project, launchName, this.customAttributes);
 
+        // Created first so it stays at the top of the launch tree. Summary logs are emitted later
+        // under an explicitly bound LoggingContext on the shutdown thread (see shutdown()).
         this.summaryItemUuid = client.startRootItem(
                 "Performance Summary Report",
                 "STEP",
@@ -167,6 +169,10 @@ public class PerformanceReporter {
     /**
      * Completes reporting. {@code beforeFinishItems} runs after summary logs and before items are closed
      * (used by tools that attach extra artifacts such as an HTML dashboard).
+     * <p>
+     * The summary item is started in {@link #init} so it appears first in the launch tree. Gatling live
+     * emits summary logs from {@code StatsEngine.stop} on a different thread than {@code start}, so
+     * {@code ReportPortal.emitLog} needs a LoggingContext bound on the shutdown thread before those logs.
      */
     public void shutdown(Runnable beforeFinishItems) {
         if (!client.isStarted()) {
@@ -178,11 +184,12 @@ public class PerformanceReporter {
         PerformanceStatsCollector.SamplerStats globalStats = statsCollector.getGlobalStats();
         this.slaResult = SlaEvaluator.evaluate(slaConfig, globalStats);
 
-        emitAggregatedReportLogs(globalStats, slaResult);
-
-        if (beforeFinishItems != null) {
-            beforeFinishItems.run();
-        }
+        client.withItemLoggingContext(summaryItemUuid, () -> {
+            emitAggregatedReportLogs(globalStats, slaResult);
+            if (beforeFinishItems != null) {
+                beforeFinishItems.run();
+            }
+        });
 
         boolean slaFailed = slaConfig.hasAnyThreshold() && !slaResult.isPassed();
         Date now = Calendar.getInstance().getTime();
