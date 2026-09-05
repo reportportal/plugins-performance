@@ -51,6 +51,11 @@ public final class PerformanceSample {
         return durationMs;
     }
 
+    /** Request completion time: {@code timestamp + max(durationMs, 0)}. */
+    public long getEndTimestamp() {
+        return timestamp + Math.max(durationMs, 0L);
+    }
+
     public boolean isSuccess() {
         return success;
     }

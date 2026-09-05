@@ -29,6 +29,7 @@ public class PerformanceReporter {
 
     private final ReportPortalClient client = new ReportPortalClient();
     private final PerformanceStatsCollector statsCollector = new PerformanceStatsCollector();
+    private final ThroughputAggregator throughputAggregator = new ThroughputAggregator();
     private final Map<String, Maybe<String>> scenarioSuites = new ConcurrentHashMap<>();
     private final Map<String, Maybe<String>> requestSuites = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> scenarioRequestKeys = new ConcurrentHashMap<>();
@@ -39,6 +40,7 @@ public class PerformanceReporter {
 
     private Maybe<String> summaryItemUuid;
     private SlaConfig slaConfig = new SlaConfig(null, null, null);
+    private ThroughputConfig throughputConfig = ThroughputConfig.defaults();
     private List<ItemAttributesRQ> customAttributes = Collections.emptyList();
     private SlaEvaluator.Result slaResult;
 
@@ -60,9 +62,14 @@ public class PerformanceReporter {
         );
     }
 
+    public void setThroughputConfig(ThroughputConfig throughputConfig) {
+        this.throughputConfig = throughputConfig != null ? throughputConfig : ThroughputConfig.defaults();
+    }
+
     public void processSample(PerformanceSample sample) {
         String label = trackedLabel(sample);
         statsCollector.registerSample(label, sample.getDurationMs(), sample.isSuccess());
+        throughputAggregator.record(sample);
         reportSampleHistory(sample, label);
     }
 
@@ -183,9 +190,10 @@ public class PerformanceReporter {
 
         PerformanceStatsCollector.SamplerStats globalStats = statsCollector.getGlobalStats();
         this.slaResult = SlaEvaluator.evaluate(slaConfig, globalStats);
+        ThroughputMetrics throughput = throughputAggregator.snapshot(throughputConfig);
 
         client.withItemLoggingContext(summaryItemUuid, () -> {
-            emitAggregatedReportLogs(globalStats, slaResult);
+            emitAggregatedReportLogs(globalStats, slaResult, throughput);
             if (beforeFinishItems != null) {
                 beforeFinishItems.run();
             }
@@ -215,7 +223,7 @@ public class PerformanceReporter {
         }
 
         client.finishLaunch(slaFailed ? "FAILED" : "PASSED", now);
-        updateLaunchAttributes(globalStats, slaResult);
+        updateLaunchAttributes(globalStats, slaResult, throughput);
     }
 
     public void shutdown() {
@@ -223,7 +231,8 @@ public class PerformanceReporter {
     }
 
     private void updateLaunchAttributes(PerformanceStatsCollector.SamplerStats globalStats,
-                                        SlaEvaluator.Result slaResult) {
+                                        SlaEvaluator.Result slaResult,
+                                        ThroughputMetrics throughput) {
         if (globalStats.getTotal() <= 0) {
             return;
         }
@@ -232,6 +241,8 @@ public class PerformanceReporter {
         attributes.add(createAttribute("p50", String.format("%d_ms", globalStats.getPercentile(50.0))));
         attributes.add(createAttribute("p95", String.format("%d_ms", globalStats.getPercentile(95.0))));
         attributes.add(createAttribute("p99", String.format("%d_ms", globalStats.getPercentile(99.0))));
+        attributes.add(createAttribute("throughput", String.format("%.2f_rps", throughput.getOverallMeanRps())));
+        attributes.add(createAttribute("peak_throughput", String.format("%.2f_rps", throughput.getPeakRps())));
 
         if (slaConfig.hasAnyThreshold()) {
             attributes.add(createAttribute("sla", slaResult.isPassed() ? "PASS" : "FAIL"));
@@ -242,13 +253,15 @@ public class PerformanceReporter {
     }
 
     private void emitAggregatedReportLogs(PerformanceStatsCollector.SamplerStats globalStats,
-                                          SlaEvaluator.Result slaResult) {
+                                          SlaEvaluator.Result slaResult,
+                                          ThroughputMetrics throughput) {
         emitSummaryLog("INFO", "# FINAL PERFORMANCE AGGREGATED REPORT");
 
         boolean slaFailed = slaConfig.hasAnyThreshold() && !slaResult.isPassed();
         emitSummaryLog(slaFailed ? "ERROR" : "INFO", SlaEvaluator.toMarkdown(slaResult));
 
         emitSummaryLog("INFO", MetricsFormatter.globalMetricsMarkdown(globalStats));
+        emitSummaryLog("INFO", MetricsFormatter.throughputMarkdown(throughput));
         emitSummaryLog("INFO", MetricsFormatter.perRequestMetricsMarkdown(statsCollector.getStatsMap().values()));
     }
 

@@ -27,6 +27,27 @@ public final class MetricsFormatter {
         );
     }
 
+    public static String throughputMarkdown(ThroughputMetrics throughput) {
+        if (throughput == null) {
+            throughput = ThroughputMetrics.empty();
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("## Throughput\n\n");
+        sb.append("| Overall mean (req/s) | Steady-state (req/s) | Peak (req/s) |\n");
+        sb.append("| :---: | :---: | :---: |\n");
+        sb.append(String.format(
+                "| %.2f | %.2f | %.2f |\n",
+                throughput.getOverallMeanRps(),
+                throughput.getSteadyStateRps(),
+                throughput.getPeakRps()
+        ));
+        if (throughput.isSteadyStateFellBackToOverall()) {
+            sb.append("\nSteady-state window was not usable "
+                    + "(ramp-up + ramp-down >= total duration); reported overall mean instead.\n");
+        }
+        return sb.toString();
+    }
+
     public static String perRequestMetricsMarkdown(Iterable<PerformanceStatsCollector.SamplerStats> stats) {
         StringBuilder sb = new StringBuilder();
         sb.append("## Per-request metrics\n\n");
