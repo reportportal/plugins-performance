@@ -110,8 +110,8 @@ your ReportPortal version).
 One launch per test run, with this hierarchy:
 
 ```
-Launch  (attributes: p50, p95, p99, sla=PASS|FAIL + your custom attributes)
-├── Performance Summary Report          STEP   -> SLA table, global and per-request metrics (Markdown logs)
+Launch  (attributes: p50, p95, p99, throughput, peak_throughput, sla=PASS|FAIL + your custom attributes)
+├── Performance Summary Report          STEP   -> SLA table, global metrics, throughput, per-request metrics (Markdown logs)
 └── Scenario: <thread group / scenario>  SUITE
     └── <request label>                  SUITE  -> PASSED, or FAILED if it had any failure
         └── <thread> | <code> | <ms>     STEP   -> failed samples only, with an ERROR log
@@ -340,6 +340,9 @@ property, environment variable, `gatling.reportportal.*` in `gatling.conf`, then
 | SLA error rate (%) | `rp.sla.error.rate.pct` | `RP_SLA_ERROR_RATE_PCT` | `sla.errorRatePct` |
 | Include labels (regex) | `rp.sample.include.regex` | `RP_SAMPLE_INCLUDE_REGEX` | `sample.includeRegex` |
 | Exclude labels (regex) | `rp.sample.exclude.regex` | `RP_SAMPLE_EXCLUDE_REGEX` | `sample.excludeRegex` |
+| Throughput ramp-up (s) | `rp.throughput.rampup.seconds` | `RP_THROUGHPUT_RAMPUP_SECONDS` | `throughput.rampUpSeconds` |
+| Throughput ramp-down (s) | `rp.throughput.rampdown.seconds` | `RP_THROUGHPUT_RAMPDOWN_SECONDS` | `throughput.rampDownSeconds` |
+| Peak throughput window (s) | `rp.throughput.window.seconds` | `RP_THROUGHPUT_WINDOW_SECONDS` | `throughput.windowSizeSeconds` |
 | Attributes (up to 5) | `rp.attribute.1` … `.5` | `RP_ATTRIBUTE_1` … `_5` | `attribute.1` … `.5`, or the `attributes` list |
 
 ```hocon
@@ -352,6 +355,11 @@ gatling.reportportal {
     p95Ms = 800
     p99Ms = 1500
     errorRatePct = 1
+  }
+  throughput {
+    rampUpSeconds = 30
+    rampDownSeconds = 10
+    windowSizeSeconds = 5
   }
   attributes = ["env:staging", "release:24.3", "nightly"]
 }
@@ -384,8 +392,9 @@ instead. Missing endpoint, token or project fails the run with an `IllegalStateE
 **Both**
 
 - SLA thresholds are global (p95, p99, error rate over all requests) and evaluated once at
-  the end of the run. There are no per-request thresholds, and no throughput, latency or
-  connect-time metrics.
+  the end of the run. There are no per-request thresholds, and no latency or connect-time
+  metrics. Throughput is overall mean, optional steady-state (ramp-up/ramp-down excluded),
+  and peak over a sliding window.
 - Percentiles come from an HdrHistogram with 2 significant digits, so they carry up to ~1%
   error, and any response time above 1 hour is clipped to 1 hour.
 - At most 1000 distinct request labels per run; everything after that is folded into
@@ -406,7 +415,7 @@ instead. Missing endpoint, token or project fails the run with an `IllegalStateE
 ## Planned improvements
 
 - Gatling 3.10+ (Pekko) support in `plugin-gatling-pekko`.
-- Per-request SLA thresholds, plus throughput and error-type breakdowns.
+- Per-request SLA thresholds and error-type breakdowns.
 - Relocated packages in the Gatling shaded JAR to remove classpath conflicts.
 - Scenario names and response codes in post-run mode by parsing more of `simulation.log`.
 - Attaching Grafana panel snapshots for the run's time range next to the summary report.

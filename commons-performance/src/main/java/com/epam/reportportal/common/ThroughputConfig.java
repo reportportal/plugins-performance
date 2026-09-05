@@ -32,6 +32,19 @@ public final class ThroughputConfig {
         return new ThroughputConfig(Duration.ZERO, Duration.ZERO, DEFAULT_WINDOW_SIZE_SECONDS);
     }
 
+    /**
+     * Blank / null values use defaults: ramp-up and ramp-down {@code 0}, window {@code 1} second.
+     */
+    public static ThroughputConfig fromParameters(String rampUpSeconds,
+                                                  String rampDownSeconds,
+                                                  String windowSizeSeconds) {
+        return new ThroughputConfig(
+                Duration.ofSeconds(parseNonNegativeLong(rampUpSeconds, 0L, "throughput ramp-up seconds")),
+                Duration.ofSeconds(parseNonNegativeLong(rampDownSeconds, 0L, "throughput ramp-down seconds")),
+                parsePositiveInt(windowSizeSeconds, DEFAULT_WINDOW_SIZE_SECONDS, "throughput window size seconds")
+        );
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -58,6 +71,28 @@ public final class ThroughputConfig {
 
     public long getWindowSizeMs() {
         return windowSizeSeconds * 1000L;
+    }
+
+    private static long parseNonNegativeLong(String value, long defaultValue, String name) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        long parsed = Long.parseLong(value.trim());
+        if (parsed < 0) {
+            throw new IllegalArgumentException(name + " must be >= 0, got: " + value);
+        }
+        return parsed;
+    }
+
+    private static int parsePositiveInt(String value, int defaultValue, String name) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        int parsed = Integer.parseInt(value.trim());
+        if (parsed < 1) {
+            throw new IllegalArgumentException(name + " must be >= 1, got: " + value);
+        }
+        return parsed;
     }
 
     private static Duration requireNonNegative(Duration duration, String name) {

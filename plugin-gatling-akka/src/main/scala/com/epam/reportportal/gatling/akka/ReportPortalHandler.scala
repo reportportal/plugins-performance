@@ -30,6 +30,7 @@ final class ReportPortalHandler(config: ReportPortalPluginConfig) {
       config.slaConfig,
       config.customAttributes
     )
+    reporter.setThroughputConfig(config.throughputConfig)
     started = true
   }
 

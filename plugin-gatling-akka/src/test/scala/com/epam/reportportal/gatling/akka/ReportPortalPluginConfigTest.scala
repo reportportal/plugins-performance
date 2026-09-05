@@ -37,6 +37,55 @@ class ReportPortalPluginConfigTest {
     assertTrue(loaded.sampleFilter.accept("API/login"))
     assertFalse(loaded.sampleFilter.accept("other"))
     assertEquals(2, loaded.customAttributes.size())
+    assertEquals(java.time.Duration.ZERO, loaded.throughputConfig.getRampUpDuration)
+    assertEquals(java.time.Duration.ZERO, loaded.throughputConfig.getRampDownDuration)
+    assertEquals(1, loaded.throughputConfig.getWindowSizeSeconds)
+  }
+
+  @Test
+  def load_readsThroughputBlock(): Unit = {
+    val config = ConfigFactory.parseString(
+      """
+        |gatling.reportportal {
+        |  endpoint = "http://rp.example"
+        |  apiKey = "token-1"
+        |  project = "proj"
+        |  throughput {
+        |    rampUpSeconds = 30
+        |    rampDownSeconds = 10
+        |    windowSizeSeconds = 5
+        |  }
+        |}
+        |""".stripMargin
+    )
+
+    val loaded = ReportPortalPluginConfig.load(config, _ => None, _ => None)
+
+    assertEquals(java.time.Duration.ofSeconds(30), loaded.throughputConfig.getRampUpDuration)
+    assertEquals(java.time.Duration.ofSeconds(10), loaded.throughputConfig.getRampDownDuration)
+    assertEquals(5, loaded.throughputConfig.getWindowSizeSeconds)
+  }
+
+  @Test
+  def load_prefersThroughputSystemPropertiesOverConfig(): Unit = {
+    val config = ConfigFactory.parseString(
+      """
+        |gatling.reportportal {
+        |  endpoint = "http://rp.example"
+        |  apiKey = "token-1"
+        |  project = "proj"
+        |  throughput.windowSizeSeconds = 5
+        |}
+        |""".stripMargin
+    )
+
+    val loaded = ReportPortalPluginConfig.load(
+      config,
+      Map("rp.throughput.window.seconds" -> "10").get,
+      _ => None
+    )
+
+    assertEquals(10, loaded.throughputConfig.getWindowSizeSeconds)
   }
 
   @Test

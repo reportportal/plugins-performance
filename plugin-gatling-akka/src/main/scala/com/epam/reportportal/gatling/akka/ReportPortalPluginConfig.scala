@@ -3,6 +3,7 @@ package com.epam.reportportal.gatling.akka
 import com.epam.reportportal.common.CustomLaunchAttributes
 import com.epam.reportportal.common.SampleFilter
 import com.epam.reportportal.common.SlaConfig
+import com.epam.reportportal.common.ThroughputConfig
 import com.epam.ta.reportportal.ws.model.attribute.ItemAttributesRQ
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -23,6 +24,7 @@ final case class ReportPortalPluginConfig(
     project: String,
     launchName: String,
     slaConfig: SlaConfig,
+    throughputConfig: ThroughputConfig,
     sampleFilter: SampleFilter,
     customAttributes: JList[ItemAttributesRQ]
 ) {
@@ -55,7 +57,11 @@ object ReportPortalPluginConfig {
 
     def gatling(path: String): Option[String] = {
       val full = s"gatling.reportportal.$path"
-      if (config.hasPath(full)) Option(config.getString(full)) else None
+      if (!config.hasPath(full)) {
+        None
+      } else {
+        Option(String.valueOf(config.getValue(full).unwrapped())).map(_.trim).filter(_.nonEmpty)
+      }
     }
 
     def rp(key: String): Option[String] =
@@ -114,6 +120,27 @@ object ReportPortalPluginConfig {
       ).orNull
     )
 
+    val throughputConfig = ThroughputConfig.fromParameters(
+      first(
+        sysProp("rp.throughput.rampup.seconds"),
+        env("RP_THROUGHPUT_RAMPUP_SECONDS"),
+        gatling("throughput.rampUpSeconds"),
+        gatling("throughput.ramp-up-seconds")
+      ).orNull,
+      first(
+        sysProp("rp.throughput.rampdown.seconds"),
+        env("RP_THROUGHPUT_RAMPDOWN_SECONDS"),
+        gatling("throughput.rampDownSeconds"),
+        gatling("throughput.ramp-down-seconds")
+      ).orNull,
+      first(
+        sysProp("rp.throughput.window.seconds"),
+        env("RP_THROUGHPUT_WINDOW_SECONDS"),
+        gatling("throughput.windowSizeSeconds"),
+        gatling("throughput.window-size-seconds")
+      ).orNull
+    )
+
     val sampleFilter = SampleFilter.fromParameters(
       first(
         sysProp("rp.sample.include.regex"),
@@ -160,6 +187,7 @@ object ReportPortalPluginConfig {
       project = project,
       launchName = launchName,
       slaConfig = slaConfig,
+      throughputConfig = throughputConfig,
       sampleFilter = sampleFilter,
       customAttributes = customAttributes
     )

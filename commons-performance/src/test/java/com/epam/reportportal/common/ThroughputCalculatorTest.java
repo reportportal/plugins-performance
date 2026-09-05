@@ -203,6 +203,19 @@ class ThroughputCalculatorTest {
     }
 
     @Test
+    void fromParameters_usesDefaultsWhenBlank() {
+        assertEquals(ThroughputConfig.defaults(), ThroughputConfig.fromParameters(null, "  ", ""));
+    }
+
+    @Test
+    void fromParameters_parsesSeconds() {
+        ThroughputConfig config = ThroughputConfig.fromParameters("30", "10", "5");
+        assertEquals(Duration.ofSeconds(30), config.getRampUpDuration());
+        assertEquals(Duration.ofSeconds(10), config.getRampDownDuration());
+        assertEquals(5, config.getWindowSizeSeconds());
+    }
+
+    @Test
     void nullSamplesInTheList_areSkipped() {
         List<ThroughputSample> samples = Arrays.asList(at(0L), null, at(1_000L));
         ThroughputMetrics metrics = ThroughputCalculator.calculate(samples);
