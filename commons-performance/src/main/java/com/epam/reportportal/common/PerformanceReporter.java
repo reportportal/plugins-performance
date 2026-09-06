@@ -238,11 +238,11 @@ public class PerformanceReporter {
         }
 
         Set<ItemAttributeResource> attributes = new HashSet<>();
-        attributes.add(createAttribute("p50", String.format("%d_ms", globalStats.getPercentile(50.0))));
-        attributes.add(createAttribute("p95", String.format("%d_ms", globalStats.getPercentile(95.0))));
-        attributes.add(createAttribute("p99", String.format("%d_ms", globalStats.getPercentile(99.0))));
-        attributes.add(createAttribute("throughput", String.format("%.2f_rps", throughput.getOverallMeanRps())));
-        attributes.add(createAttribute("peak_throughput", String.format("%.2f_rps", throughput.getPeakRps())));
+        attributes.add(createAttribute("p50_ms", String.format("%d", globalStats.getPercentile(50.0))));
+        attributes.add(createAttribute("p95_ms", String.format("%d", globalStats.getPercentile(95.0))));
+        attributes.add(createAttribute("p99_ms", String.format("%d", globalStats.getPercentile(99.0))));
+        attributes.add(createAttribute("throughput_rps", String.format("%.2f", throughput.getOverallMeanRps())));
+        attributes.add(createAttribute("peak_throughput_rps", String.format("%.2f", throughput.getPeakRps())));
 
         if (slaConfig.hasAnyThreshold()) {
             attributes.add(createAttribute("sla", slaResult.isPassed() ? "PASS" : "FAIL"));

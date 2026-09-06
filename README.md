@@ -110,7 +110,7 @@ your ReportPortal version).
 One launch per test run, with this hierarchy:
 
 ```
-Launch  (attributes: p50, p95, p99, throughput, peak_throughput, sla=PASS|FAIL + your custom attributes)
+Launch  (attributes: p50_ms, p95_ms, p99_ms, throughput_rps, peak_throughput_rps, sla=PASS|FAIL + your custom attributes)
 ├── Performance Summary Report          STEP   -> SLA table, global metrics, throughput, per-request metrics (Markdown logs)
 └── Scenario: <thread group / scenario>  SUITE
     └── <request label>                  SUITE  -> PASSED, or FAILED if it had any failure
