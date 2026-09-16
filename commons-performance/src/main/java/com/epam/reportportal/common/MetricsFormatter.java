@@ -33,18 +33,13 @@ public final class MetricsFormatter {
         }
         StringBuilder sb = new StringBuilder();
         sb.append("## Throughput\n\n");
-        sb.append("| Overall mean (req/s) | Steady-state (req/s) | Peak (req/s) |\n");
-        sb.append("| :---: | :---: | :---: |\n");
+        sb.append("| Overall mean (req/s) | Peak (req/s) |\n");
+        sb.append("| :---: | :---: |\n");
         sb.append(String.format(
-                "| %.2f | %.2f | %.2f |\n",
+                "| %.2f | %.2f |\n",
                 throughput.getOverallMeanRps(),
-                throughput.getSteadyStateRps(),
                 throughput.getPeakRps()
         ));
-        if (throughput.isSteadyStateFellBackToOverall()) {
-            sb.append("\nSteady-state window was not usable "
-                    + "(ramp-up + ramp-down >= total duration); reported overall mean instead.\n");
-        }
         return sb.toString();
     }
 

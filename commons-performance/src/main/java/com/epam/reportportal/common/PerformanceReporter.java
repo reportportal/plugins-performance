@@ -205,10 +205,12 @@ public class PerformanceReporter {
         client.finishItem(summaryItemUuid, slaFailed ? "FAILED" : "PASSED", now);
 
         for (Map.Entry<String, Maybe<String>> entry : requestSuites.entrySet()) {
+            String requestKey = entry.getKey();
             boolean requestFailed = requestFailureCounts
-                    .getOrDefault(entry.getKey(), new AtomicInteger(0))
+                    .getOrDefault(requestKey, new AtomicInteger(0))
                     .get() > 0;
-            client.finishItem(entry.getValue(), requestFailed ? "FAILED" : "PASSED", now);
+            Set<ItemAttributesRQ> requestMetrics = metricsForRequestItem(requestKey);
+            client.finishItem(entry.getValue(), requestFailed ? "FAILED" : "PASSED", now, requestMetrics);
         }
 
         for (Map.Entry<String, Maybe<String>> entry : scenarioSuites.entrySet()) {
@@ -237,10 +239,7 @@ public class PerformanceReporter {
             return;
         }
 
-        Set<ItemAttributeResource> attributes = new HashSet<>();
-        attributes.add(createAttribute("p50_ms", String.format("%d", globalStats.getPercentile(50.0))));
-        attributes.add(createAttribute("p95_ms", String.format("%d", globalStats.getPercentile(95.0))));
-        attributes.add(createAttribute("p99_ms", String.format("%d", globalStats.getPercentile(99.0))));
+        Set<ItemAttributeResource> attributes = new HashSet<>(PerformanceMetricsAttributes.forLaunchLatency(globalStats));
         attributes.add(createAttribute("throughput_rps", String.format("%.2f", throughput.getOverallMeanRps())));
         attributes.add(createAttribute("peak_throughput_rps", String.format("%.2f", throughput.getPeakRps())));
 
@@ -267,6 +266,17 @@ public class PerformanceReporter {
 
     private void emitSummaryLog(String level, String message) {
         client.emitLog(summaryItemUuid, level, message, Calendar.getInstance().getTime());
+    }
+
+    private Set<ItemAttributesRQ> metricsForRequestItem(String requestKey) {
+        String label = labelFromRequestKey(requestKey);
+        PerformanceStatsCollector.SamplerStats stats = statsCollector.getStatsMap().get(label);
+        return PerformanceMetricsAttributes.forRequestItem(stats);
+    }
+
+    private String labelFromRequestKey(String requestKey) {
+        int separator = requestKey.indexOf(KEY_SEP);
+        return separator >= 0 ? requestKey.substring(separator + 1) : requestKey;
     }
 
     private ItemAttributeResource createAttribute(String key, String value) {

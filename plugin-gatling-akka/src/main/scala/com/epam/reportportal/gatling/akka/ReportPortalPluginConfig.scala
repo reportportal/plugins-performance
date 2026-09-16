@@ -122,18 +122,6 @@ object ReportPortalPluginConfig {
 
     val throughputConfig = ThroughputConfig.fromParameters(
       first(
-        sysProp("rp.throughput.rampup.seconds"),
-        env("RP_THROUGHPUT_RAMPUP_SECONDS"),
-        gatling("throughput.rampUpSeconds"),
-        gatling("throughput.ramp-up-seconds")
-      ).orNull,
-      first(
-        sysProp("rp.throughput.rampdown.seconds"),
-        env("RP_THROUGHPUT_RAMPDOWN_SECONDS"),
-        gatling("throughput.rampDownSeconds"),
-        gatling("throughput.ramp-down-seconds")
-      ).orNull,
-      first(
         sysProp("rp.throughput.window.seconds"),
         env("RP_THROUGHPUT_WINDOW_SECONDS"),
         gatling("throughput.windowSizeSeconds"),

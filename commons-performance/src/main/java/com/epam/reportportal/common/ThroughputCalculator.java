@@ -1,8 +1,5 @@
 package com.epam.reportportal.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -23,7 +20,6 @@ import java.util.stream.Stream;
  */
 public final class ThroughputCalculator {
 
-    private static final Logger logger = LoggerFactory.getLogger(ThroughputCalculator.class);
     private static final int SCALE = 2;
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(SCALE, RoundingMode.HALF_UP);
 
@@ -103,62 +99,9 @@ public final class ThroughputCalculator {
 
         long totalDurationMs = tEnd - tStart;
         BigDecimal overall = rps(n, totalDurationMs);
-
-        SteadyStateWindow window = resolveSteadyStateWindow(tStart, tEnd, totalDurationMs, config);
-        long steadyRequests = window.fallback
-                ? n
-                : countCompletionsInClosedInterval(endTimes, window.startMs, window.endMs);
-        BigDecimal steady = window.fallback
-                ? overall
-                : rps(steadyRequests, window.durationMs);
-
         BigDecimal peak = peakRps(endTimes, config.getWindowSizeMs(), totalDurationMs, overall);
 
-        return new ThroughputMetrics(
-                overall,
-                steady,
-                peak,
-                window.fallback,
-                n,
-                steadyRequests,
-                totalDurationMs,
-                window.durationMs
-        );
-    }
-
-    private static SteadyStateWindow resolveSteadyStateWindow(long tStart,
-                                                              long tEnd,
-                                                              long totalDurationMs,
-                                                              ThroughputConfig config) {
-        long rampUpMs = config.getRampUpMs();
-        long rampDownMs = config.getRampDownMs();
-        long excluded = rampUpMs + rampDownMs;
-
-        if (excluded >= totalDurationMs) {
-            if (excluded > 0) {
-                logger.warn("rampUpDuration ({}) + rampDownDuration ({}) >= total duration ({} ms); "
-                                + "falling back to overall mean throughput",
-                        config.getRampUpDuration(), config.getRampDownDuration(), totalDurationMs);
-            }
-            return new SteadyStateWindow(tStart, tEnd, totalDurationMs, excluded > 0);
-        }
-
-        long windowStart = tStart + rampUpMs;
-        long windowEnd = tEnd - rampDownMs;
-        return new SteadyStateWindow(windowStart, windowEnd, windowEnd - windowStart, false);
-    }
-
-    /**
-     * Inclusive on both ends, matching {@code [T_start + rampUp, T_end - rampDown]}.
-     */
-    private static long countCompletionsInClosedInterval(long[] endTimes, long fromInclusive, long toInclusive) {
-        long count = 0L;
-        for (long end : endTimes) {
-            if (end >= fromInclusive && end <= toInclusive) {
-                count++;
-            }
-        }
-        return count;
+        return new ThroughputMetrics(overall, peak, n, totalDurationMs);
     }
 
     /**
@@ -202,19 +145,5 @@ public final class ThroughputCalculator {
         return BigDecimal.valueOf(requests)
                 .multiply(BigDecimal.valueOf(1000L))
                 .divide(BigDecimal.valueOf(durationMs), SCALE, RoundingMode.HALF_UP);
-    }
-
-    private static final class SteadyStateWindow {
-        private final long startMs;
-        private final long endMs;
-        private final long durationMs;
-        private final boolean fallback;
-
-        private SteadyStateWindow(long startMs, long endMs, long durationMs, boolean fallback) {
-            this.startMs = startMs;
-            this.endMs = endMs;
-            this.durationMs = durationMs;
-            this.fallback = fallback;
-        }
     }
 }

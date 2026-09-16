@@ -104,9 +104,17 @@ public class ReportPortalClient {
     }
 
     public void finishItem(Maybe<String> itemUuid, String status, Date endTime) {
+        finishItem(itemUuid, status, endTime, null);
+    }
+
+    public void finishItem(Maybe<String> itemUuid, String status, Date endTime,
+                           Set<ItemAttributesRQ> attributes) {
         FinishTestItemRQ finish = new FinishTestItemRQ();
         finish.setEndTime(endTime);
         finish.setStatus(status);
+        if (attributes != null && !attributes.isEmpty()) {
+            finish.setAttributes(new HashSet<>(attributes));
+        }
         launch.finishTestItem(itemUuid, finish);
     }
 

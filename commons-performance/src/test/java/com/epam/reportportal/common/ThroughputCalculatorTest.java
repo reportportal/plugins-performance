@@ -3,7 +3,6 @@ package com.epam.reportportal.common;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,12 +14,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Worked example for the three throughput strategies, plus edge cases.
+ * Worked example for overall mean and peak throughput, plus edge cases.
  * <p>
  * Fixture (relative milliseconds from {@link #T0}):
  * <pre>
@@ -42,36 +40,6 @@ class ThroughputCalculatorTest {
         assertEquals(4_000L, metrics.getTotalDurationMs());
         assertEquals(1.25, metrics.getOverallMeanRps());
         assertEquals(new BigDecimal("1.25"), metrics.getOverallMeanRpsExact());
-    }
-
-    @Test
-    void steadyState_excludesRampUpAndRampDownWindows() {
-        // Window [T0+1000, T0+3000] → 3 completions in 2.00 s = 1.50 rps
-        ThroughputConfig config = ThroughputConfig.builder()
-                .rampUpSeconds(1)
-                .rampDownSeconds(1)
-                .windowSizeSeconds(1)
-                .build();
-
-        ThroughputMetrics metrics = ThroughputCalculator.calculate(evenlySpaced(5, 1_000L), config);
-
-        assertFalse(metrics.isSteadyStateFellBackToOverall());
-        assertEquals(3L, metrics.getSteadyStateRequests());
-        assertEquals(2_000L, metrics.getSteadyStateDurationMs());
-        assertEquals(1.50, metrics.getSteadyStateRps());
-        assertEquals(1.25, metrics.getOverallMeanRps());
-    }
-
-    @Test
-    void steadyState_fallsBackToOverallWhenRampsConsumeTheRun() {
-        ThroughputConfig config = new ThroughputConfig(Duration.ofSeconds(3), Duration.ofSeconds(2), 1);
-
-        ThroughputMetrics metrics = ThroughputCalculator.calculate(evenlySpaced(5, 1_000L), config);
-
-        assertTrue(metrics.isSteadyStateFellBackToOverall());
-        assertEquals(metrics.getOverallMeanRps(), metrics.getSteadyStateRps());
-        assertEquals(5L, metrics.getSteadyStateRequests());
-        assertTrue(MetricsFormatter.throughputMarkdown(metrics).contains("ramp-up + ramp-down"));
     }
 
     @Test
@@ -106,7 +74,6 @@ class ThroughputCalculatorTest {
     void emptyOrNullInput_returnsZeroes() {
         ThroughputMetrics empty = ThroughputCalculator.calculate(Collections.emptyList());
         assertEquals(0.00, empty.getOverallMeanRps());
-        assertEquals(0.00, empty.getSteadyStateRps());
         assertEquals(0.00, empty.getPeakRps());
         assertEquals(0L, empty.getTotalRequests());
 
@@ -196,23 +163,20 @@ class ThroughputCalculatorTest {
     }
 
     @Test
-    void config_rejectsInvalidParameters() {
-        assertThrows(IllegalArgumentException.class, () -> new ThroughputConfig(0, 0, 0));
-        assertThrows(IllegalArgumentException.class,
-                () -> ThroughputConfig.builder().rampUp(Duration.ofSeconds(-1)).build());
+    void config_rejectsInvalidWindowSize() {
+        assertThrows(IllegalArgumentException.class, () -> new ThroughputConfig(0));
+        assertThrows(IllegalArgumentException.class, () -> ThroughputConfig.fromParameters("0"));
     }
 
     @Test
-    void fromParameters_usesDefaultsWhenBlank() {
-        assertEquals(ThroughputConfig.defaults(), ThroughputConfig.fromParameters(null, "  ", ""));
+    void fromParameters_usesDefaultWhenBlank() {
+        assertEquals(ThroughputConfig.defaults(), ThroughputConfig.fromParameters(null));
+        assertEquals(ThroughputConfig.defaults(), ThroughputConfig.fromParameters("  "));
     }
 
     @Test
-    void fromParameters_parsesSeconds() {
-        ThroughputConfig config = ThroughputConfig.fromParameters("30", "10", "5");
-        assertEquals(Duration.ofSeconds(30), config.getRampUpDuration());
-        assertEquals(Duration.ofSeconds(10), config.getRampDownDuration());
-        assertEquals(5, config.getWindowSizeSeconds());
+    void fromParameters_parsesWindowSize() {
+        assertEquals(5, ThroughputConfig.fromParameters("5").getWindowSizeSeconds());
     }
 
     @Test
