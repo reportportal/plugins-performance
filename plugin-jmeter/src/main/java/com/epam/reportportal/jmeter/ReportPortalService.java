@@ -3,6 +3,7 @@ package com.epam.reportportal.jmeter;
 import com.epam.reportportal.common.PerformanceReporter;
 import com.epam.reportportal.common.SampleFilter;
 import com.epam.reportportal.common.SlaConfig;
+import com.epam.reportportal.common.ThroughputConfig;
 import com.epam.ta.reportportal.ws.model.attribute.ItemAttributesRQ;
 import org.apache.commons.io.FileUtils;
 import org.apache.jmeter.report.dashboard.ReportGenerator;
@@ -39,14 +40,15 @@ public class ReportPortalService {
     private BufferedWriter jtlWriter;
 
     public void init(String endpoint, String apiToken, String project, String launchName,
-                     boolean attachHtmlDashboard, SlaConfig slaConfig, SampleFilter sampleFilter,
-                     List<ItemAttributesRQ> customAttributes) {
+                     boolean attachHtmlDashboard, SlaConfig slaConfig, ThroughputConfig throughputConfig,
+                     SampleFilter sampleFilter, List<ItemAttributesRQ> customAttributes) {
         this.attachHtmlDashboard = attachHtmlDashboard;
         this.sampleFilter = sampleFilter != null
                 ? sampleFilter
                 : SampleFilter.fromParameters("", "");
 
         reporter.init(endpoint, apiToken, project, launchName, slaConfig, customAttributes);
+        reporter.setThroughputConfig(throughputConfig);
 
         if (this.attachHtmlDashboard) {
             try {

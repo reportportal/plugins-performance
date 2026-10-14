@@ -194,6 +194,7 @@ self-contained.
 | `SLA_P95_MS` | *(empty)* | Global p95 threshold in ms; empty disables the check |
 | `SLA_P99_MS` | *(empty)* | Global p99 threshold in ms; empty disables the check |
 | `SLA_ERROR_RATE_PCT` | *(empty)* | Global max error rate in percent; empty disables the check |
+| `Throughput_Window_Seconds` | *(empty)* | Peak throughput sliding window in seconds; empty uses 1 |
 | `Sample_Include_Regex` | *(empty)* | Only report labels matching this Java regex |
 | `Sample_Exclude_Regex` | *(empty)* | Drop labels matching this Java regex (applied first) |
 | `Attribute_1` … `Attribute_5` | *(not listed)* | Launch attributes: `key:value`, `key=value`, or a bare tag |
@@ -217,9 +218,13 @@ After the test finishes:
 2. Find the launch named as in `Launch_Name` (status PASSED or FAILED depending on SLA /
    failures).
 3. Open **Performance Summary Report** — Markdown tables with global and per-request
-   metrics, plus the SLA block if thresholds were set.
-4. Under **Scenario: …** open a request that failed — you should see up to 20 failed
-   sample steps with response details.
+   metrics, throughput, plus the SLA block if thresholds were set.
+4. On the launch, check attributes such as `p50_ms`, `p95_ms`, `p99_ms`, `throughput_rps`,
+   `peak_throughput_rps`, and `sla` when thresholds were set.
+5. Under **Scenario: …**, each request SUITE has attributes (`total`, `failed`,
+   `error_rate_pct`, `avg_ms`, `p50_ms`, `p95_ms`, `p99_ms`).
+6. Open a request that failed — you should see up to 20 failed sample steps with response
+   details.
 
 If nothing appears in ReportPortal, check the JMeter log (`jmeter.log`) for ReportPortal
 HTTP errors: wrong URL, wrong project name, or invalid token are the usual causes.

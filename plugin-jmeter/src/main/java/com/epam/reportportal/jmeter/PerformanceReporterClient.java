@@ -3,6 +3,7 @@ package com.epam.reportportal.jmeter;
 import com.epam.reportportal.common.CustomLaunchAttributes;
 import com.epam.reportportal.common.SampleFilter;
 import com.epam.reportportal.common.SlaConfig;
+import com.epam.reportportal.common.ThroughputConfig;
 import com.epam.ta.reportportal.ws.model.attribute.ItemAttributesRQ;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.samplers.SampleResult;
@@ -30,6 +31,8 @@ public class PerformanceReporterClient extends AbstractBackendListenerClient {
         arguments.addArgument("SLA_P95_MS", "");
         arguments.addArgument("SLA_P99_MS", "");
         arguments.addArgument("SLA_ERROR_RATE_PCT", "");
+        // Peak throughput sliding window size in seconds (default 1).
+        arguments.addArgument("Throughput_Window_Seconds", "");
         // Sample filtering: include/exclude by label regex.
         arguments.addArgument("Sample_Include_Regex", "");
         arguments.addArgument("Sample_Exclude_Regex", "");
@@ -59,6 +62,10 @@ public class PerformanceReporterClient extends AbstractBackendListenerClient {
                 context.getParameter("Sample_Exclude_Regex")
         );
 
+        ThroughputConfig throughputConfig = ThroughputConfig.fromParameters(
+                context.getParameter("Throughput_Window_Seconds")
+        );
+
         List<ItemAttributesRQ> customAttributes =
                 CustomLaunchAttributes.fromParameters(
                         context.getParameter("Attribute_1"),
@@ -69,7 +76,9 @@ public class PerformanceReporterClient extends AbstractBackendListenerClient {
                 );
 
         this.rpService = new ReportPortalService();
-        this.rpService.init(url, token, project, launch, attachHtml, slaConfig, sampleFilter, customAttributes);
+        this.rpService.init(
+                url, token, project, launch, attachHtml, slaConfig, throughputConfig, sampleFilter, customAttributes
+        );
 
         super.setupTest(context);
     }
