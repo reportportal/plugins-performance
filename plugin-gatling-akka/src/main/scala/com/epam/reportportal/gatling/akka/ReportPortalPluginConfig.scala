@@ -117,6 +117,18 @@ object ReportPortalPluginConfig {
         env("RP_SLA_ERROR_RATE_PCT"),
         gatling("sla.errorRatePct"),
         gatling("sla.error-rate-pct")
+      ).orNull,
+      first(
+        sysProp("rp.sla.min.throughput.rps"),
+        env("RP_SLA_MIN_THROUGHPUT_RPS"),
+        gatling("sla.minThroughputRps"),
+        gatling("sla.min-throughput-rps")
+      ).orNull,
+      first(
+        sysProp("rp.sla.min.peak.throughput.rps"),
+        env("RP_SLA_MIN_PEAK_THROUGHPUT_RPS"),
+        gatling("sla.minPeakThroughputRps"),
+        gatling("sla.min-peak-throughput-rps")
       ).orNull
     )
 

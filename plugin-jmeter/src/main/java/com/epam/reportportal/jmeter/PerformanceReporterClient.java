@@ -31,6 +31,8 @@ public class PerformanceReporterClient extends AbstractBackendListenerClient {
         arguments.addArgument("SLA_P95_MS", "");
         arguments.addArgument("SLA_P99_MS", "");
         arguments.addArgument("SLA_ERROR_RATE_PCT", "");
+        arguments.addArgument("SLA_MIN_THROUGHPUT_RPS", "");
+        arguments.addArgument("SLA_MIN_PEAK_THROUGHPUT_RPS", "");
         // Peak throughput sliding window size in seconds (default 1).
         arguments.addArgument("Throughput_Window_Seconds", "");
         // Sample filtering: include/exclude by label regex.
@@ -54,7 +56,9 @@ public class PerformanceReporterClient extends AbstractBackendListenerClient {
         SlaConfig slaConfig = SlaConfig.fromParameters(
                 context.getParameter("SLA_P95_MS"),
                 context.getParameter("SLA_P99_MS"),
-                context.getParameter("SLA_ERROR_RATE_PCT")
+                context.getParameter("SLA_ERROR_RATE_PCT"),
+                context.getParameter("SLA_MIN_THROUGHPUT_RPS"),
+                context.getParameter("SLA_MIN_PEAK_THROUGHPUT_RPS")
         );
 
         SampleFilter sampleFilter = SampleFilter.fromParameters(

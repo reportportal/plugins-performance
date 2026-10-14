@@ -70,7 +70,12 @@ public final class SlaEvaluator {
     private SlaEvaluator() {
     }
 
-    public static Result evaluate(SlaConfig config, PerformanceStatsCollector.SamplerStats stats) {
+    public static Result evaluate(SlaConfig config,
+                                  PerformanceStatsCollector.SamplerStats stats,
+                                  ThroughputMetrics throughput) {
+        if (throughput == null) {
+            throughput = ThroughputMetrics.empty();
+        }
         List<Check> checks = new ArrayList<>();
 
         if (config.getP95Ms() != null) {
@@ -103,6 +108,28 @@ public final class SlaEvaluator {
                     String.format("%.2f%%", actual),
                     "<= " + String.format("%.2f%%", target),
                     actual <= target ? Status.PASS : Status.FAIL
+            ));
+        }
+
+        if (config.getMinOverallThroughputRps() != null) {
+            double actual = throughput.getOverallMeanRps();
+            double target = config.getMinOverallThroughputRps();
+            checks.add(new Check(
+                    "throughput_rps",
+                    String.format("%.2f req/s", actual),
+                    ">= " + String.format("%.2f req/s", target),
+                    actual >= target ? Status.PASS : Status.FAIL
+            ));
+        }
+
+        if (config.getMinPeakThroughputRps() != null) {
+            double actual = throughput.getPeakRps();
+            double target = config.getMinPeakThroughputRps();
+            checks.add(new Check(
+                    "peak_throughput_rps",
+                    String.format("%.2f req/s", actual),
+                    ">= " + String.format("%.2f req/s", target),
+                    actual >= target ? Status.PASS : Status.FAIL
             ));
         }
 

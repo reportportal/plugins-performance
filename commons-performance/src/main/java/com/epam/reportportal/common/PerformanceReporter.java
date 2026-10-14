@@ -39,14 +39,14 @@ public class PerformanceReporter {
     private final AtomicBoolean labelOverflowReported = new AtomicBoolean();
 
     private Maybe<String> summaryItemUuid;
-    private SlaConfig slaConfig = new SlaConfig(null, null, null);
+    private SlaConfig slaConfig = new SlaConfig(null, null, null, null, null);
     private ThroughputConfig throughputConfig = ThroughputConfig.defaults();
     private List<ItemAttributesRQ> customAttributes = Collections.emptyList();
     private SlaEvaluator.Result slaResult;
 
     public void init(String endpoint, String apiToken, String project, String launchName,
                      SlaConfig slaConfig, List<ItemAttributesRQ> customAttributes) {
-        this.slaConfig = slaConfig != null ? slaConfig : new SlaConfig(null, null, null);
+        this.slaConfig = slaConfig != null ? slaConfig : new SlaConfig(null, null, null, null, null);
         this.customAttributes = customAttributes != null
                 ? new ArrayList<>(customAttributes)
                 : Collections.emptyList();
@@ -189,8 +189,8 @@ public class PerformanceReporter {
         logger.info("Generating aggregated performance report");
 
         PerformanceStatsCollector.SamplerStats globalStats = statsCollector.getGlobalStats();
-        this.slaResult = SlaEvaluator.evaluate(slaConfig, globalStats);
         ThroughputMetrics throughput = throughputAggregator.snapshot(throughputConfig);
+        this.slaResult = SlaEvaluator.evaluate(slaConfig, globalStats, throughput);
 
         client.withItemLoggingContext(summaryItemUuid, () -> {
             emitAggregatedReportLogs(globalStats, slaResult, throughput);

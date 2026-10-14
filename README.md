@@ -194,6 +194,8 @@ self-contained.
 | `SLA_P95_MS` | *(empty)* | Global p95 threshold in ms; empty disables the check |
 | `SLA_P99_MS` | *(empty)* | Global p99 threshold in ms; empty disables the check |
 | `SLA_ERROR_RATE_PCT` | *(empty)* | Global max error rate in percent; empty disables the check |
+| `SLA_MIN_THROUGHPUT_RPS` | *(empty)* | Global minimum overall mean throughput (req/s); empty disables the check |
+| `SLA_MIN_PEAK_THROUGHPUT_RPS` | *(empty)* | Global minimum peak throughput (req/s); empty disables the check |
 | `Throughput_Window_Seconds` | *(empty)* | Peak throughput sliding window in seconds; empty uses 1 |
 | `Sample_Include_Regex` | *(empty)* | Only report labels matching this Java regex |
 | `Sample_Exclude_Regex` | *(empty)* | Drop labels matching this Java regex (applied first) |
@@ -345,6 +347,8 @@ property, environment variable, `gatling.reportportal.*` in `gatling.conf`, then
 | SLA p95 (ms) | `rp.sla.p95.ms` | `RP_SLA_P95_MS` | `sla.p95Ms` |
 | SLA p99 (ms) | `rp.sla.p99.ms` | `RP_SLA_P99_MS` | `sla.p99Ms` |
 | SLA error rate (%) | `rp.sla.error.rate.pct` | `RP_SLA_ERROR_RATE_PCT` | `sla.errorRatePct` |
+| SLA min throughput (req/s) | `rp.sla.min.throughput.rps` | `RP_SLA_MIN_THROUGHPUT_RPS` | `sla.minThroughputRps` |
+| SLA min peak throughput (req/s) | `rp.sla.min.peak.throughput.rps` | `RP_SLA_MIN_PEAK_THROUGHPUT_RPS` | `sla.minPeakThroughputRps` |
 | Include labels (regex) | `rp.sample.include.regex` | `RP_SAMPLE_INCLUDE_REGEX` | `sample.includeRegex` |
 | Exclude labels (regex) | `rp.sample.exclude.regex` | `RP_SAMPLE_EXCLUDE_REGEX` | `sample.excludeRegex` |
 | Peak throughput window (s) | `rp.throughput.window.seconds` | `RP_THROUGHPUT_WINDOW_SECONDS` | `throughput.windowSizeSeconds` |
@@ -360,6 +364,8 @@ gatling.reportportal {
     p95Ms = 800
     p99Ms = 1500
     errorRatePct = 1
+    minThroughputRps = 50
+    minPeakThroughputRps = 80
   }
   throughput {
     windowSizeSeconds = 5
@@ -394,9 +400,11 @@ instead. Missing endpoint, token or project fails the run with an `IllegalStateE
 
 **Both**
 
-- SLA thresholds are global (p95, p99, error rate over all requests) and evaluated once at
-  the end of the run. There are no per-request thresholds, and no latency or connect-time
-  metrics. Throughput is overall mean and peak over a sliding window.
+- SLA thresholds are global (p95, p99, error rate, optional min overall and peak throughput
+  over all requests) and evaluated once at the end of the run. There are no per-request
+  thresholds, and no latency or connect-time metrics. Throughput is overall mean and peak
+  over a sliding window; peak SLA uses the same window as reporting (`Throughput_Window_Seconds`
+  in JMeter, `throughput.windowSizeSeconds` in Gatling).
 - Percentiles come from an HdrHistogram with 2 significant digits, so they carry up to ~1%
   error, and any response time above 1 hour is clipped to 1 hour.
 - At most 1000 distinct request labels per run; everything after that is folded into

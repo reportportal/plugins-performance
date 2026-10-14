@@ -34,6 +34,8 @@ class PerformanceReporterClientTest {
         assertEquals("JMeter Performance Metrics", defaults.get("Launch_Name"));
         assertEquals("true", defaults.get("Attach_HTML_Dashboard"));
         assertTrue(defaults.containsKey("SLA_P95_MS"));
+        assertTrue(defaults.containsKey("SLA_MIN_THROUGHPUT_RPS"));
+        assertTrue(defaults.containsKey("SLA_MIN_PEAK_THROUGHPUT_RPS"));
         assertTrue(defaults.containsKey("Throughput_Window_Seconds"));
         assertTrue(defaults.containsKey("Sample_Include_Regex"));
         assertTrue(defaults.containsKey("Sample_Exclude_Regex"));
