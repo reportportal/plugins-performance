@@ -137,8 +137,8 @@ com.epam.reportportal.jmeter.PerformanceReporterClient
 
 **From GitHub Release (recommended)**
 
-1. Download `plugin-jmeter-1.0.0-shaded.jar` from
-   [JMeter 1.0.0 release](https://github.com/reportportal/plugins-performance/releases/tag/jmeter-v1.0.0).
+1. Download `plugin-jmeter-1.1.0-shaded.jar` from
+   [JMeter 1.1.0 release](https://github.com/reportportal/plugins-performance/releases/tag/jmeter-v1.1.0).
 2. Copy it into `$JMETER_HOME/lib/ext/`.
 3. Restart JMeter (GUI or stop/start the CLI process).
 
@@ -448,7 +448,7 @@ JMeter and bundle users get the `*-shaded.jar`.
 
 Drop-in JARs for JMeter/Gatling users are attached to a GitHub Release:
 
-- JMeter: tag `jmeter-v1.0.0`, or Actions → Release → plugin `jmeter`
+- JMeter: tag `jmeter-v1.1.0`, or Actions → Release → plugin `jmeter`, version `1.1.0`
 - Gatling: tag `gatling-v1.0.0`, or plugin `gatling` (Akka JAR; Pekko is still a stub)
 - Both: tag `v1.0.0`, or plugin `all`
 
