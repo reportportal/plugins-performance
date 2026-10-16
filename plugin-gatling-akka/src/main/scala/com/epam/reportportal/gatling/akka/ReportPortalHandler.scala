@@ -6,6 +6,8 @@ import io.gatling.commons.stats.Status
 import io.gatling.core.stats.writer.ResponseMessage
 import org.slf4j.LoggerFactory
 
+import java.util.Properties
+
 /**
  * Shared ReportPortal reporting state for a single Gatling run.
  * Used by both [[ReportPortalDataWriter]] and [[ReportPortalStatsEngine]].
@@ -28,7 +30,9 @@ final class ReportPortalHandler(config: ReportPortalPluginConfig) {
       config.project,
       launchName,
       config.slaConfig,
-      config.customAttributes
+      config.customAttributes,
+      "@reportportal/gatling-akka",
+      ReportPortalHandler.gatlingVersion
     )
     reporter.setThroughputConfig(config.throughputConfig)
     started = true
@@ -85,4 +89,21 @@ final class ReportPortalHandler(config: ReportPortalPluginConfig) {
   }
 
   def isStarted: Boolean = started
+}
+
+private object ReportPortalHandler {
+  private lazy val gatlingVersion: String =
+    Option(getClass.getClassLoader.getResourceAsStream("gatling-version.properties"))
+      .flatMap { in =>
+        try {
+          val properties = new Properties()
+          properties.load(in)
+          Option(properties.getProperty("version")).map(_.trim).filter(_.nonEmpty)
+        } catch {
+          case _: Exception => None
+        } finally {
+          in.close()
+        }
+      }
+      .orNull
 }

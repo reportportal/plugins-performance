@@ -31,6 +31,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class ReportPortalService {
     private static final Logger logger = LoggerFactory.getLogger(ReportPortalService.class);
+    private static final String AGENT_NAME = "@reportportal/jmeter";
 
     private final PerformanceReporter reporter = new PerformanceReporter();
 
@@ -47,7 +48,8 @@ public class ReportPortalService {
                 ? sampleFilter
                 : SampleFilter.fromParameters("", "");
 
-        reporter.init(endpoint, apiToken, project, launchName, slaConfig, customAttributes);
+        reporter.init(endpoint, apiToken, project, launchName, slaConfig, customAttributes,
+                AGENT_NAME, JMeterUtils.getJMeterVersion());
         reporter.setThroughputConfig(throughputConfig);
 
         if (this.attachHtmlDashboard) {

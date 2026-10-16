@@ -46,12 +46,23 @@ public class PerformanceReporter {
 
     public void init(String endpoint, String apiToken, String project, String launchName,
                      SlaConfig slaConfig, List<ItemAttributesRQ> customAttributes) {
+        init(endpoint, apiToken, project, launchName, slaConfig, customAttributes, null, null);
+    }
+
+    /**
+     * @param agentName        plugin name sent as {@code agent_name}, such as {@code @reportportal/jmeter}
+     * @param frameworkVersion JMeter or Gatling version sent as {@code framework_version}
+     */
+    public void init(String endpoint, String apiToken, String project, String launchName,
+                     SlaConfig slaConfig, List<ItemAttributesRQ> customAttributes,
+                     String agentName, String frameworkVersion) {
         this.slaConfig = slaConfig != null ? slaConfig : new SlaConfig(null, null, null, null, null);
         this.customAttributes = customAttributes != null
                 ? new ArrayList<>(customAttributes)
                 : Collections.emptyList();
 
-        client.startLaunch(endpoint, apiToken, project, launchName, this.customAttributes);
+        client.startLaunch(endpoint, apiToken, project, launchName, this.customAttributes,
+                agentName, frameworkVersion);
 
         // Created first so it stays at the top of the launch tree. Summary logs are emitted later
         // under an explicitly bound LoggingContext on the shutdown thread (see shutdown()).

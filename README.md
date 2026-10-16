@@ -123,6 +123,9 @@ The launch description holds the SLA table, so the quality gate is visible from 
 launch list. Response times are aggregated in memory with HdrHistogram — individual
 successful samples are never stored or sent.
 
+A start event is also sent to Google Analytics (agent name, plugin version, and the
+JMeter or Gatling version). Set `AGENT_NO_ANALYTICS` to any value to skip it.
+
 ## JMeter plugin
 
 Implementation class (must match exactly):

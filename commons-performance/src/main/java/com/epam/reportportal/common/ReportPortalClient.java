@@ -1,5 +1,6 @@
 package com.epam.reportportal.common;
 
+import com.epam.reportportal.common.statistics.UsageStatistics;
 import com.epam.reportportal.listeners.ListenerParameters;
 import com.epam.reportportal.service.Launch;
 import com.epam.reportportal.service.LaunchImpl;
@@ -39,9 +40,15 @@ public class ReportPortalClient {
 
     private ReportPortal rp;
     private Launch launch;
+    private UsageStatistics statistics;
 
     public void startLaunch(String endpoint, String apiToken, String project, String launchName,
                             Collection<ItemAttributesRQ> attributes) {
+        startLaunch(endpoint, apiToken, project, launchName, attributes, null, null);
+    }
+
+    public void startLaunch(String endpoint, String apiToken, String project, String launchName,
+                            Collection<ItemAttributesRQ> attributes, String agentName, String frameworkVersion) {
         logger.info("Initializing ReportPortal client");
         warnIfNotEncrypted(endpoint);
 
@@ -73,6 +80,7 @@ public class ReportPortalClient {
         }
 
         this.launch = rp.newLaunch(startLaunchRQ);
+        this.statistics = UsageStatistics.start(this.launch, params, agentName, frameworkVersion);
         this.launch.start();
     }
 
@@ -174,6 +182,9 @@ public class ReportPortalClient {
         finishLaunch.setStatus(status);
         launch.finish(finishLaunch);
         logger.info("ReportPortal launch finished");
+        if (statistics != null) {
+            statistics.finish();
+        }
     }
 
     public void updateLaunch(String description, Set<ItemAttributeResource> attributes) {
